@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>dialog_about</class>
+ <widget class="QDialog" name="dialog_about">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>722</width>
+    <height>594</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>About</string>
+  </property>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>0</y>
+     <width>701</width>
+     <height>411</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;IDF Viewer 1.0b (Beta version)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;October 2021&lt;/p&gt;&lt;p&gt;Created by Miguel Sequeira&lt;/p&gt;&lt;p&gt;For reporting bugs or give feedback please send an e-mail to: &lt;a href=&quot;mailto:miguel.sequeira@tecnico.ulisboa.pt?subject=[IDF Viewer]&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miguel.sequeira@tecnico.ulisboa.pt&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Please start the subject with &amp;quot;[IDF Viewer]&amp;quot;.&lt;/p&gt;&lt;p&gt;In case of a bug, include:&lt;/p&gt;&lt;p&gt;- the OS system;&lt;/p&gt;&lt;p&gt;- the steps to reproduce the bug;&lt;/p&gt;&lt;p&gt;- the files used if applicable;&lt;/p&gt;&lt;p&gt;- and of course, any other information that you might find helpful.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;NDF Version 11.0b (IDF Beta version)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;October 2021&lt;/p&gt;&lt;p&gt;Created by Nuno Pessoa Barradas, updated by Miguel Sequeira (IDF integration)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::RichText</enum>
+   </property>
+   <property name="openExternalLinks">
+    <bool>true</bool>
+   </property>
+   <property name="textInteractionFlags">
+    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="push_openNDFManual">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>420</y>
+     <width>161</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Open NDF Manual</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>450</y>
+     <width>591</width>
+     <height>101</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Refer to: &lt;/p&gt;&lt;p&gt;- N.P.Barradas, C. Jeynes, R.P. Webb, Appl. Phys. Lett. 71 (1997) 291&lt;/p&gt;&lt;p&gt;- C. Jeynes, N.P. Barradas, P.K. Marriott, M. Jenkin, E. Wendler, G. Boudreault, R.P. Webb,&lt;/p&gt;&lt;p&gt;J. Phys. D: Appl. Phys. 36 (2003) R97-R126 (Topical Review).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
