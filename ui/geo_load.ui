@@ -294,7 +294,7 @@
            <x>12</x>
            <y>31</y>
            <width>421</width>
-           <height>26</height>
+           <height>28</height>
           </rect>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout">
@@ -1369,6 +1369,9 @@
            <widget class="QLineEdit" name="pileup_param">
             <property name="enabled">
              <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>1e-6</string>
             </property>
            </widget>
           </item>
@@ -2751,7 +2754,7 @@
      <x>0</x>
      <y>0</y>
      <width>1076</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

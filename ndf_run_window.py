@@ -7,6 +7,7 @@ from os import mkdir, listdir
 from shutil import copyfile, copytree
 from datetime import datetime
 from copy import deepcopy
+from time import sleep
 # from pickle import dump, load
 
 
@@ -37,7 +38,16 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.fields = []
 
+		self.default_flags = {
+					'fitmethod': '0 - Simulate one spectrum from ndf.prf, no fit',
+					'channelcompreesion': '0 - No compression',
+					'convolute': '1 - Convolute FWHM',
+					'distribution': '1 - Use isotropic distribution',
+					'smooth': '0 - Don\'t smooth data',
+					'normalisation': '1 - Normalise profile'
+		}
 
+		self.debug = False
 
 	def connectSignalsSlots(self):
 		self.runButton.clicked.connect(self.run_ndf)
@@ -92,7 +102,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 			self.fields.append(field)
 
-			self.set_run_options()
+		self.set_run_options()
 
 
 
@@ -110,6 +120,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		for k,o in options_combo.items():
 			idf_file.set_NDF_run_option(k, o.currentText())
 
+
 	def set_run_options(self):
 		options_combo = {
 					'fitmethod': self.comboRun_speed,
@@ -118,10 +129,13 @@ class Window(QMainWindow, Ui_MainWindow):
 					'distribution': self.comboRun_isodist,
 					'smooth': self.comboRun_smooth,
 					'normalisation': self.comboRun_normalise
-		}
+			}
 								
 		for k,o in options_combo.items():			
 			_, model = self.idf_file.get_NDF_run_option(k)
+
+			if model is None:
+				model = self.default_flags[k]
 			
 			if model is None:
 				o.setCurrentIndex(-1)
@@ -132,38 +146,48 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def run_ndf(self):
 		print('Opening NDF...')
-
-		self.main_window.save_state()
+		if self.debug: 
+			print('ndf_run_windoww, run_ndf - at start nversions:', len(self.project.sim_version_history))
+			for p in self.project.sim_version_history:
+				print('\t', p.path_dir.split('/')[-1])
 
 		# create folder and copy the files from previous simulation to there (to avoid double scattering calculation etc)
-		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M')
-		print('ln139', new_folder)
+		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M:%S') + '_idv'
+		path_new_idf = new_folder + '/' + self.idf_file.name + '.xml'
+
 		try:
-			if len(self.project.sim_version_history) > 0:
+			if len(self.project.sim_version_history) > 1:
 				# prev_folder = self.idf_file.path_dir
 				prev_folder = self.project.sim_version_history[-1].path_dir
 				
-				print('ln145', prev_folder)
-				# files = listdir(prev_folder)
 				copytree(prev_folder, new_folder)
 			else:
 				mkdir(new_folder)
 
 		except Exception as e:
-			raise e
+			if self.debug: raise e
 			pass
 
-
-		idf_file_run = deepcopy(self.idf_file)		
-		self.project.sim_version_history.append(idf_file_run)
-		# self.idf_file = self.project.sim_version_history[-1]
-
-		
+		self.idf_file = self.main_window.idf_file
+		self.main_window.save_state()
 		for i,f in enumerate(self.fields):
-			idf_file_run.set_simulation_group(f.text(), spectra_id=i)
-		self.save_run_options(idf_file_run)
+			self.idf_file.set_simulation_group(f.text(), spectra_id=i)
+		self.save_run_options(self.idf_file)
+		
+		# a copy of self.idf_file should be created before saving to avoid changing the origianl path_dir 
+		idf_file_run = deepcopy(self.idf_file)
+		idf_file_run.save_idf(path_new_idf)		
+		self.project.sim_version_history.append(idf_file_run)
 
-		idf_file_run.save_idf(new_folder + '/' + self.idf_file.name + '.xml')
+		if self.debug: 
+			print('ndf_run_windoww, run_ndf - at end nversions:', len(self.project.sim_version_history))
+			for p in self.project.sim_version_history:
+				print('\t', p.path_dir.split('/')[-2])
+				print('\t', p.get_geo_parameters()['beam_energy'])
+		
+		
+
+		# idf_file_run.save_idf(new_folder + '/' + self.idf_file.name + '.xml')
 		self.project.save()
 
 		# self.project.sim_version_history.append(idf_file_run)
@@ -237,21 +261,38 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		print(cmd)
 		with open(path_bat,'w') as file:
+			file.write('echo \'Run started...\' > run_status.res \n')
 			file.write('cd ' + path + '\n')
 			file.write(cmd + '\n')
+			file.write('echo \'Finished\' > ../run_status.res \n')
 			file.write('echo \'\n\nPress enter to close:\'\n')
-			file.write('read line')
+			if self.main_window.settings['Actions'].getboolean('keep_NDF_open'):
+				file.write('read line')
 
 		
 		run = Popen(shell + ' -- bash ' + path_bat, shell = True)
 		
-		
+		# self.run_state = run
 
-
+		while run.poll() is None:
+			sleep(1)
 
 
 	
-
+	def wait_NDF(self):
+		with open('run_status.res', 'r') as file:
+			status = True
+			print('Running ndf')
+			while status:
+				line = file.readline()
+				if 'Run' in line:
+					print('.', end='')
+					sleep(2)
+					file.seek(0,0)
+				else:
+					print('Finished')
+					status = False
+					
 
 	def tcn_warning(self):
 		file = self.idf_file.path_dir + 'ndf.tcn'
@@ -289,6 +330,8 @@ class Window(QMainWindow, Ui_MainWindow):
 	def close_window(self):
 		for i,f in enumerate(self.fields):
 			self.idf_file.set_simulation_group(f.text(), spectra_id=i)
+
+		self.save_run_options(self.idf_file)
 
 		self.close()
 

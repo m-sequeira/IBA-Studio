@@ -1,6 +1,9 @@
 # Specify filepatterns you want git to ignore.
 
 run_tests_pyIBA
+pyIBA_0
 pyIBA
-*.pyc
+tests
 
+*.pyc
+*.res

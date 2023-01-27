@@ -1,5 +1,6 @@
 from sys import argv, exit, path as syspath
 from os import remove
+from shutil import rmtree
 from os.path import dirname, realpath, join as osjoin
 from glob import glob 
 from webbrowser import open_new
@@ -36,7 +37,7 @@ syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
 from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol
 from NDF_project import project, load as load_project
-
+from Settings import settings
 
 
 class Window(QMainWindow, Ui_MainWindow):
@@ -50,8 +51,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 		self.connectSignalsSlots()
+
+		self.settings = settings().get_settings()
+		self.debug = self.settings['Verbose'].getboolean('debug')
+
+		if self.debug: settings().print_settings()
 		
-		self.debug = False
 
 		self.inicialize()
 
@@ -167,6 +172,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.nsims = 0
 		self._simulation_id = 0
 
+		
+
 
 		# resize the element table columns with
 		horizontalHeader = self.elements_table.horizontalHeader()
@@ -223,6 +230,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.path_advanced = None
 		self.setWindowTitle('IDF Viewer: New file')
 		self.reset_window()
+		self.update_runList()
 		
 
 		
@@ -283,7 +291,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboSpectrum_id.view().pressed.connect(self.save_state)
 		self.comboSpectrum_id_results.view().pressed.connect(self.save_state)
 		self.comboSimulation.view().pressed.connect(self.save_state)
-		self.tabWidget.currentChanged.connect(self.save_state)
+		# self.tabWidget.currentChanged.connect(self.save_state)
 
 		# advanced tab
 		self.pushLoad_advanced_inputs.clicked.connect(self.load_advanced_inputs)
@@ -325,6 +333,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		except Exception as e:
 			if self.debug: raise e
 			print('State not saved')
+
+		if self.debug: print('NDF_gui, save_state - ', self.idf_file.get_geo_parameters()['beam_energy'], self.geo_energy.text())
 
 	def onchange_spectrum_combo(self):
 		curr_index = self.comboSpectrum_id.currentIndex()
@@ -397,7 +407,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.reload_models_box()
 			self.reload_technique()
 		except Exception as e:
-			if debug: raise e
+			if self.debug: raise e
 
 		# breakpoint()
 		# print('Ln 269', self.spectra_id, newvalue, self.comboSpectrum_id.currentIndex())
@@ -495,24 +505,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 	def update_runList(self):
-		prev_names = []
-		size_oriname = len(self.idf_file.name)
-		for idf in self.project.sim_version_history[::-1]:
-			name = idf.path_dir.split('/')[-2]
-			name = name[size_oriname+1:]
-			name = name.replace('_', ' ')
-			if name == '':
-				name = 'Initial'
-			prev_names.append(name)
-		
-		prev_names.append('In file')
-
+		prev_names = self.project.get_version_names()
 		
 		self.runList.blockSignals(True)
 		self.runList.clear()
 		self.runList.addItems(prev_names)
 		self.runList.blockSignals(False)
-		self.runList.setCurrentRow(0)
+		
 		
 
 	
@@ -568,25 +567,29 @@ class Window(QMainWindow, Ui_MainWindow):
 			print('Path: %s' %self.path_dir)
 			print('File: %s' %self.file)
 
+			## try loading idv
 			try:
 				pickle_filename = self.path[:-3] + 'idv'
 				self.project = load_project(pickle_filename)
 				# self.idf_file = self.project.sim_version_history[-1]
 				self.idf_file = IDF(self.path)
 
-				self.runList.blockSignals(True)
+				self.reload_window()                
+
+				# self.runList.blockSignals(True)
 				self.update_runList()
-				self.runList.blockSignals(False)
+				self.runList.setCurrentRow(self.runList.count()-1)
+				# self.runList.blockSignals(False)
 
 				print('Pickle Loaded')
 
-				self.reload_window()                
 			except Exception as e:
 				# raise e
 				try:
 					self.idf_file = IDF(self.path)
 					self.project = project(self.idf_file)
 					self.reload_window()
+					self.update_runList()
 				except Exception as e:
 					msg = QMessageBox()
 					msg.setIcon(QMessageBox.Information)
@@ -599,9 +602,16 @@ class Window(QMainWindow, Ui_MainWindow):
 			
 			
 
-	def save_as(self):
-		fileName,_ = QFileDialog.getSaveFileName(self, 'Save File')
-		
+	def save_as(self, givenFileName = ''):
+		if givenFileName != '':
+			fileName,_ = QFileDialog.getSaveFileName(self, 'Save File')
+		else:
+			fileName = givenFileName
+
+		## check if fileName ends with .xml
+		if fileName[-4:] != '.xml':
+			fileName = fileName + '.xml'
+
 		if fileName != '':
 			self.setWindowTitle('IDF Viewer: ' + fileName)
 
@@ -609,11 +619,9 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.path_dir = '/'.join(self.path.split('/')[:-1]) + '/'
 			self.file = self.path.split('/')[-1]
 
-			print('Opening file...')
-			print('Path: %s' %self.path_dir)
-			print('File: %s' %self.file)
-
 			self.save()
+			self.open(fileName)
+
 
 	def save(self):
 		if self.path is None:
@@ -658,10 +666,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 	def run_ndf(self):
+		if self.debug: print('NDF_gui, run_ndf - main window button clicked')
 		if self.idf_file.file_name == '':
 			self.save()
-		else:
-			self.save_state()
+		# else:
+		# 	self.save_state()
 
 		self.ndf_window.update_idf_file_version()
 
@@ -676,13 +685,18 @@ class Window(QMainWindow, Ui_MainWindow):
 		print('Files cleared')
 		ext_toclear = ['.geo','.str', '.prf' ,'.spc', '.bat', 
 						'.dat', '.res', '.11', '.01', '.pe',
-						'.ord', '.log', '.spx'
+						'.ord', '.log', '.spx', '.idv', '.res'
 				]
+		ext_dir_toclear = ['_idv']
 
 		for ext in ext_toclear:
-			files = glob(self.path_dir + '*' +ext)
+			files = glob(self.path_dir + '*' + ext)
 			for f in files:
 				remove(f)
+		for ext in ext_dir_toclear:
+			dirs = glob(self.path_dir + '*' + ext)
+			for d in dirs:
+				rmtree(d)
 
 	def remove_results_from_IDF(self):
 		self.idf_file.remove_results_from_IDF()
@@ -706,8 +720,10 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.profile_table.setRowCount(ncols)
 
 	def reload_window(self):
+		if self.debug: print('NDF_gui, reload_window - reset_window begins')
 		self.reset_window()
 
+		if self.debug: print('NDF_gui, reload_window - reloading begins')
 		if self.path != None:
 			self.setWindowTitle('IDF Viewer: ' + self.path.split('/')[-1])
 
@@ -730,6 +746,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 			self.set_geometry_fit_box()
 			self.set_models_box()
+			# self.update_runList()
 
 			try:
 				self.set_results_box()
@@ -740,9 +757,13 @@ class Window(QMainWindow, Ui_MainWindow):
 				#print(e)
 
 
+		if self.debug: print('NDF_gui, reload_window - reloading ends')
+
+
 
 
 	def reset_window(self):
+		if self.debug: print('NDF_gui, reset_window - begins')
 		# self.inicialize()
 		for widget in QApplication.allWidgets():
 			for ele2reset in [QLineEdit, QPlainTextEdit]:
@@ -770,11 +791,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# self.reset_results_box()
 
-
 		labels = ['Thickness'] + ['']*self.profile_table_fit_result.columnCount()
 		self.profile_table_fit_result.setHorizontalHeaderLabels(labels)
 
 		# set defaults
+		self.pileup_param.setText('1e-6')
 		self.doublescatter_scaleparam.setText('1')
 		self.straggling_scaleparam.setText('1')
 		# self.profile_min_thickness.setText('0')
@@ -782,11 +803,15 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.checkCalibration.setChecked(True)
 		self.checkCharge.setChecked(True)
 
-
+		if self.debug: print('NDF_gui, reset_window - set all to 0')
+		self.comboTechnique.blockSignals(True)
 		self.nspectra = 0
 		self.spectra_id = 0
 		self.nsims = 0
 		self.simulation_id = 0
+		self.comboTechnique.blockSignals(False)
+
+		if self.debug: print('NDF_gui, reset_window - reset combos')
 		self.comboReactions.setVisible(False)
 		self.update_comboSpectrum_id()
 		self.update_comboReactions()
@@ -794,6 +819,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboTechnique.blockSignals(True)
 		self.comboTechnique.setCurrentIndex(0)
 		self.comboTechnique.blockSignals(False)
+
+		if self.debug: print('NDF_gui, reset_window - reset figs')
 
 		try:
 			# self.canvas.close()
@@ -1036,23 +1063,22 @@ class Window(QMainWindow, Ui_MainWindow):
 					p['param'].setText(param)
 
 
-	
+
 
 
 	def load_results(self):
-		# self.reload_window()
-		# self.idf_file = IDF(self.path)
-		
-		self.update_runList()
-
-		# need to reload the file from the disk because IDF2NDF (of NDF) changes 
-		# the file (adds the file ids used for output)
-		self.project.reload_idf_file(-1)
-		self.idf_file = self.project.sim_version_history[-1]
-		# self.idf_file = IDF(self.idf_file.file_path)
-		# self.change_idf_version()
+		if self.debug: print('NDF_gui, load_results - begins')
+		self.update_runList()		
 
 		try:
+			# need to reload the file from the disk because IDF2NDF (of NDF) changes 
+			# the file (adds the file ids used for output)
+			self.idf_file  = self.project.reload_idf_file(-1)
+			# self.idf_file = deepcopy(self.project.sim_version_history[-1])
+			self.runList.blockSignals(True)
+			self.runList.setCurrentRow(0)
+			self.runList.blockSignals(False)
+
 			for i in range(self.nspectra):
 				self.idf_file.set_spectra_result(spectra_id = i)
 				self.idf_file.set_geometry_result(spectra_id = i)
@@ -1063,7 +1089,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.idf_file.save_idf(self.idf_file.file_path)
 			self.project.save()
 		except Exception as e:
-			# raise e
+			if self.debug: raise e
 			print('Result files not found')
 			msg = QMessageBox()
 			msg.setIcon(QMessageBox.Information)
@@ -1078,16 +1104,28 @@ class Window(QMainWindow, Ui_MainWindow):
 		
 
 	def change_idf_version(self):
+		if self.path == None:
+			return
+
+		if self.debug: print('NDF_gui, change_idf_version - begins')
+
+
 		index_run = self.runList.currentRow()
 		text_run = self.runList.currentItem().text()
-		
-		if 'In file' == text_run:
+
+
+		if 'In xml file' == text_run:
 			self.idf_file = IDF(self.path)
 		else:
+			if self.debug: print('NDF_gui, change_idf_version - deep copy made of i:', index_run)
 			self.idf_file = deepcopy(self.project.sim_version_history[-(index_run + 1)])
 		
+		if self.debug: print('NDF_gui, change_idf_version - ',  self.idf_file.path_dir)
+
 		spectra_id_old = self.spectra_id
+		if self.debug: print('NDF_gui, change_idf_version - reload window')
 		self.reload_window()
+		if self.debug: print('NDF_gui, change_idf_version - change spetrac_id')
 		self.spectra_id = spectra_id_old
 
 		if self.ndf_window.isVisible():
@@ -1218,9 +1256,10 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.add_menu_to_button(self.copyElements_button)                               
 	
 	def set_profile_fit_result_tab(self):
+		if self.debug: print('NDF_gui, set_profile_fit_result_tab begins')
 		profile_params = self.idf_file.get_profile_fit_result(spectra_id=self.spectra_id, simulation_id=self.simulation_id)
 
-		if (profile_params is None) or (profile_params['nlayers'] is None):
+		if (profile_params is None) or (profile_params['nlayers'] in [None, '0']):
 			return
 
 		self.nlayers_fit_result.setText(profile_params['nlayers'])
@@ -1337,9 +1376,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
-	def load_spectrum(self, spectra_id=False):
-		options = QFileDialog.Options()
-		fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
+	def load_spectrum(self, spectra_id=False, fileName = False):
+		if fileName == False:
+			options = QFileDialog.Options()
+			fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
 		
 
 		if spectra_id == False:
@@ -2110,6 +2150,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			
 
 		except Exception as e:
+			if self.debug: raise e
 			print('Result files not found')
 			msg = QMessageBox()
 			msg.setIcon(QMessageBox.Information)
@@ -2344,7 +2385,10 @@ if __name__ == "__main__":
 	win = Window()
 
 	if len(argv)>1:
-		win.open(fileName = argv[1])
+		if '--debug' in argv:
+			win.debug = True
+		if '-' != argv[-1][0]:
+			win.open(fileName = argv[-1])
 
 	win.show()
 
