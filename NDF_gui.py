@@ -746,15 +746,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
 			self.set_geometry_fit_box()
 			self.set_models_box()
-			# self.update_runList()
-
 			try:
 				self.set_results_box()
 				self.add_menu_to_button(self.copyElements_button)
 			except Exception as e:
 				if self.debug: raise e
 				pass
-				#print(e)
 
 
 		if self.debug: print('NDF_gui, reload_window - reloading ends')
@@ -1074,7 +1071,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			# need to reload the file from the disk because IDF2NDF (of NDF) changes 
 			# the file (adds the file ids used for output)
 			self.idf_file  = self.project.reload_idf_file(-1)
-			# self.idf_file = deepcopy(self.project.sim_version_history[-1])
+
 			self.runList.blockSignals(True)
 			self.runList.setCurrentRow(0)
 			self.runList.blockSignals(False)
@@ -1171,11 +1168,22 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.ax_result.legend(frameon = False, ncol= 2, loc='center left', bbox_to_anchor=(1, 0.5))
 
 		else:
-			self.ax_result.plot(data_x_given[3:], data_y_given[3:], 'x', label = 'Exp.')
-			self.ax_result.plot(data_x_fit[3:], data_y_fit[3:], label = 'Fit')
+			cut_channel = 50
+			self.ax_result.plot(data_x_given[cut_channel:], data_y_given[cut_channel:], 'o', ms = 2, label = 'Exp.')
+			self.ax_result.plot(data_x_fit[cut_channel:], data_y_fit[cut_channel:], label = 'Fit')
+			
+			if self.settings['Appearance'].getboolean('show_elemental_fits'):
+				data_ele = self.idf_file.get_elemental_dataxy_fit(spectra_id = self.spectra_id, simulation_id = self.simulation_id)
+
+				for name, y in data_ele.items():
+				    if name == 'x':
+				        continue
+				    self.ax_result.plot(data_ele['x'][cut_channel:], y[cut_channel:], '--', label = name)
+			    
+
+
 			self.ax_result.set_xlabel('Energy (Channels)')
 			self.ax_result.legend(frameon=False)
-			
 
 
 
@@ -1356,7 +1364,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.idf_file.delete_spectrum(spectra_id=self.spectra_id)
 		self.nspectra = self.idf_file.get_number_of_spectra()       
 		self.update_comboSpectrum_id()
-
 
 		self.spectra_id = oldIndex
 		
@@ -2221,6 +2228,8 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 		self.idf_file = main_window.idf_file
 		self.spectra_id = main_window.spectra_id
 		self.simulation_id = main_window.simulation_id
+		self.debug = main_window.debug
+		self.settings = main_window.settings
 
 		if type == False:
 			self.figure_result = plt.figure(figsize=(10,6))
