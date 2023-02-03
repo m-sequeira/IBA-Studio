@@ -47,7 +47,7 @@ class Window(QMainWindow, Ui_MainWindow):
 					'normalisation': '1 - Normalise profile'
 		}
 
-		self.debug = False
+		self.debug = self.main_window.debug
 
 	def connectSignalsSlots(self):
 		self.runButton.clicked.connect(self.run_ndf)

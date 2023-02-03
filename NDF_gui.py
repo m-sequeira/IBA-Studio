@@ -35,7 +35,7 @@ from ndf_run_window import Window as NDF_Window
 
 syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
-from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol
+from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol, pretty_formula_ratio
 from NDF_project import project, load as load_project
 from Settings import settings
 
@@ -185,6 +185,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.executable_dir = osjoin(dirname(__file__), 'pyIBA') + '/'
 		#print(self.executable_dir)
 
+		self.error_window = self.message_window()
 
 		self.about_window = About_Window()
 		self.new_windows = []
@@ -243,7 +244,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.actionOpen.triggered.connect(self.open)
 		self.actionSave.triggered.connect(self.save)
 		self.actionSave_As.triggered.connect(self.save_as)
-		self.actionExit.triggered.connect(self.close)
+		self.actionExit.triggered.connect(self.quit)
 		self.actionSpectrum.triggered.connect(self.export_spectrum)
 
 		# edit menu
@@ -275,6 +276,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# window dynamics
 		self.elements_nelements.valueChanged.connect(self.resize_elements_table)
+		self.elements_nelements.valueChanged.connect(self.set_sample_fit_box)
 		self.profile_nlayers.valueChanged.connect(self.resize_profile_table)
 		
 		self.comboSpectrum_id.currentIndexChanged.connect(self.onchange_spectrum_combo)
@@ -285,6 +287,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.geo_projectile_in.textChanged.connect(self.reload_geoprojout)
 
 		self.comboSpectrum_id_results.currentIndexChanged.connect(self.onchange_spectrum_combo_results)
+
+		# self.tabWidget.currentChanged.connect(self.set_sample_fit_box)
+		self.elements_table.itemChanged.connect(self.set_sample_fit_box)
+		# self.elements_table.keyPressEvent = self.onclick_elements_table
+
 
 
 		# save states
@@ -303,18 +310,27 @@ class Window(QMainWindow, Ui_MainWindow):
 	def onclick_profile(self,event):
 		self.new_windows.append(NDF_Fit_Figure(self, type = 'profile'))
 		self.new_windows[-1].show()
+		self.new_windows[-1].setWindowTitle('Profile:', self.runList.currentItem().text())
+
 
 	def onclick_spectra_fit_result(self,event):
 		self.new_windows.append(NDF_Fit_Figure(self))
 		self.new_windows[-1].show()
+		self.new_windows[-1].setWindowTitle('Fit: %s' %self.runList.currentItem().text())
 
 	def onclick_spectra_fit_result_advanced(self,event):
 		self.new_windows.append(NDF_Fit_Figure(self, type = 'advanced'))
 		self.new_windows[-1].show()
 
+
 	def onclick_spectrum(self,event):
 		self.new_windows.append(IDF_spectrum_Figure(self))
 		self.new_windows[-1].show()
+		self.new_windows[-1].setWindowTitle('Spectrum %s' %str(self.comboSpectrum_id.currentText()))
+
+	def onclick_elements_table(self, event):
+		self.set_sample_fit_box()
+
 
 	def save_state(self):
 		# if self.comboTechnique.currentText() != 'SIMS':
@@ -601,10 +617,18 @@ class Window(QMainWindow, Ui_MainWindow):
 					if self.debug: raise e
 			
 			
+	def quit(self):
+		for window in self.new_windows:
+			window.close()
+		self.ndf_window.close_window()
+		self.close()
 
 	def save_as(self, givenFileName = ''):
-		if givenFileName != '':
+		if self.debug: print('NDF_gui, save_as path', givenFileName)
+		if givenFileName in ['', False] :
 			fileName,_ = QFileDialog.getSaveFileName(self, 'Save File')
+			if fileName == '':
+				return
 		else:
 			fileName = givenFileName
 
@@ -624,14 +648,28 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 	def save(self):
-		if self.path is None:
+		if self.debug: print('NDF_gui, save, path', self.path, '-')
+		if self.path is None or self.path == '':
 			self.save_as()
 			return
 
-		self.save_geometry_box()
-		self.save_elements_box()
-		self.save_profile_box()
-		self.save_user_notes()      
+		try:
+			self.save_geometry_box()
+			self.save_elements_box()
+			self.save_profile_box()
+			self.save_user_notes()      
+		except Exception as e:
+			if self.debug: raise e
+			print('Not saved, check input')
+			msg = QMessageBox()
+			msg.setIcon(QMessageBox.Information)
+
+			msg.setText("Not saved, check input")
+			msg.setWindowTitle("Error")
+			msg.setStandardButtons(QMessageBox.Ok)
+			result = msg.exec_()
+
+			return
 
 		self.save_geometry_box_fits()
 		self.save_fit_methods_box()
@@ -669,6 +707,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		if self.debug: print('NDF_gui, run_ndf - main window button clicked')
 		if self.idf_file.file_name == '':
 			self.save()
+		
+		if self.idf_file.file_name == '':
+			return
+				
+
 		# else:
 		# 	self.save_state()
 
@@ -676,6 +719,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		if ~self.ndf_window.isVisible():
 			self.ndf_window.show()
+
+			frame = self.frameGeometry()
+			self.ndf_window.move(frame.x() + frame.width(), frame.y())
 
 
 
@@ -908,7 +954,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		if combo_index == -1:
 			self.set_element_color(self.geo_geometry, 'QComboBox')
 
-		self.geo_charge.setText(self.idf_file.get_charge(self.spectra_id))
+		if params[key]:
+			self.geo_charge.setText(self.idf_file.get_charge(self.spectra_id))
+		else:
+			self.geo_charge.setText('')
+			self.set_element_color(self.geo_charge, "QLineEdit")
 
 		technique = self.comboTechnique.currentText()
 
@@ -1061,6 +1111,36 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
+	def set_sample_fit_box(self):
+		self.fitElementArea.setWidgetResizable(True)
+
+		fit_checked = []
+		while self.fitElementLayout.count():
+			child = self.fitElementLayout.takeAt(0)
+			if child.widget():
+				if child.widget().isChecked():
+					fit_checked.append(True)
+				else:
+					fit_checked.append(False)
+
+				child.widget().deleteLater()
+
+
+		nrows = self.elements_table.rowCount()
+
+		for i in range(nrows):
+			name = self.elements_table.item(i,0)
+			if name is None: 
+				name = ''
+			else:
+				name = name.text().strip()
+			# if name.strip() != '':
+			checkBox = QCheckBox(name)
+			self.fitElementLayout.addWidget(checkBox)
+
+
+		for i in range(min(len(fit_checked), self.fitElementLayout.count())):
+			self.fitElementLayout.itemAt(i).widget().setChecked(fit_checked[i])
 
 
 	def load_results(self):
@@ -1176,10 +1256,10 @@ class Window(QMainWindow, Ui_MainWindow):
 				data_ele = self.idf_file.get_elemental_dataxy_fit(spectra_id = self.spectra_id, simulation_id = self.simulation_id)
 
 				for name, y in data_ele.items():
-				    if name == 'x':
-				        continue
-				    self.ax_result.plot(data_ele['x'][cut_channel:], y[cut_channel:], '--', label = name)
-			    
+					if name == 'x':
+						continue
+					self.ax_result.plot(data_ele['x'][cut_channel:], y[cut_channel:], '--', label = name)
+				
 
 
 			self.ax_result.set_xlabel('Energy (Channels)')
@@ -1249,14 +1329,16 @@ class Window(QMainWindow, Ui_MainWindow):
 		i = 0
 		for key, param in elements.items():
 			if key != 'nelements':
-				item = QTableWidgetItem(param) 
+				param = param.replace('?=', '')
+				param = pretty_formula_ratio(param)
+				item = QTableWidgetItem(param)
 				self.elements_table_fit_result.setItem(i,0,item)                
 				i += 1
 		
 		i = 0
 		for key, param in elements_initial.items():
-			
 			if key != 'nelements':
+				param['name'] = param['name'].replace('?=', '')
 				item = QTableWidgetItem(param['name']) 
 				self.elements_table_fit_result_initial.setItem(i,0,item)
 				i += 1   
@@ -1638,6 +1720,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.canvas_exp_spectra.draw()
 
 	def set_elements_box(self): 
+		if self.debug: print('NDF_gui, set_elements_box begins')
 		nelements = self.idf_file.get_nelements()
 
 		if nelements:
@@ -1652,11 +1735,17 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.set_element_color(self.elements_table, "QTableWidget")
 			return
 
-
+		print('NDF_gui, set_elements_box elements', elements)
 		i= 0
+		fitted = False
 		for key, param in elements.items():
 			if key == 'nelements':
 				continue
+
+			if '?=' in param['name']:
+				param['name'] = param['name'].replace('?=','')
+				print('NDF_gui, set_elements_box clean name:', param['name'])
+				fitted = True
 
 			item = QTableWidgetItem(param['name']) 
 			self.elements_table.setItem(i,0,item)
@@ -1670,11 +1759,17 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.elements_table.setItem(i,4,item)
 			item = QTableWidgetItem(str(param['depth'][1])) 
 			self.elements_table.setItem(i,5,item)
-						
+	
+			if fitted:
+				print('NDF_gui, set_elements_box, fitted', fitted)
+				self.fitElementLayout.itemAt(i).widget().setChecked(True)
+				fitted = False
+
 
 			i+=1
 	
 	def set_profile_box(self):
+		if self.debug: print('NDF_gui, set_profile_box begins')
 		nlayers = self.idf_file.get_nlayers()
 
 		if nlayers:
@@ -1682,15 +1777,20 @@ class Window(QMainWindow, Ui_MainWindow):
 		else:
 			self.set_element_color(self.profile_nlayers, "QSpinBox")
 		
+		try:
+			layers = self.idf_file.get_profile()
+			elements = self.idf_file.get_elements()
+		except:
+			return
 
-		layers = self.idf_file.get_profile()
-		elements = self.idf_file.get_elements()
+		print('NDF_gui, set_profile_box, ', elements)
 
 		ele_ids = [0]*elements['nelements']
 		for key, params in elements.items():
 			if key == 'nelements':
 				continue
 
+			params['name'] = params['name'].replace('?=', '')
 			ele_ids[key] = params['name']
 
 		if layers:
@@ -1703,6 +1803,8 @@ class Window(QMainWindow, Ui_MainWindow):
 				self.profile_table.setItem(i,0,item)
 
 				for j, conc in enumerate(param['concentrations']):
+					if str(conc) == None:
+						conc = 0
 					item = QTableWidgetItem(str(conc))
 
 					ele_name = layers['names'][j]
@@ -1804,7 +1906,37 @@ class Window(QMainWindow, Ui_MainWindow):
 		molecules = {'nelements': nrows}
 		col_params = []
 
+		# delete empty rows
+		rows_del = []
 		for i in range(nrows):
+			col_params = []
+
+			for j in range(ncols):
+				param = self.elements_table.item(i,j)
+				if param is None:
+					param_text = ''
+				else:
+					param_text = param.text()
+				col_params.append(param_text)
+
+			if col_params == ['', '', '', '', '', '']:
+				print('NDF_gui, save_elements_box, delete_row', i, col_params)
+				# row = self.elements_table.param.row()
+				rows_del.append(i)
+				
+				
+		for row in rows_del:
+			self.elements_table.removeRow(row)
+
+		print('NDF_gui, save_elements_box, old nrows', nrows)
+		nrows = nrows - len(rows_del)
+		print('NDF_gui, save_elements_box, new nrows', nrows)
+		self.elements_nelements.setValue(nrows)
+				
+
+		for i in range(nrows):
+			col_params = []
+
 			for j in range(ncols):
 				param = self.elements_table.item(i,j)
 				if param is None:
@@ -1813,26 +1945,89 @@ class Window(QMainWindow, Ui_MainWindow):
 					param = param.text()
 				col_params.append(param)
 
+			name = col_params[0]
+
+			print('NDF_gui, save_elements_box, ', col_params)
+
+			
+
+			if name == '':
+				self.set_element_color(self.elements_table, 'QTableWidget')
+				self.error_window.setText('Elements not well defined')
+				self.error_window.exec_()
+
+			else:
+				# introduce spaces between elements and numbers
+				full_name = name[0]
+				for k in range(1, len(name)):
+					if name[k].isnumeric() and name[k-1].isalpha():
+						full_name += ' ' + name[k]
+					else:
+						full_name += name[k]
+
+				name = full_name
+				name = name.split()
+
+				# check if every other 2 entry is a number and add one if not
+				full_name = [name[0]]
+				for k in range(1, len(name)):
+					if name[k].isalpha() and name[k-1].isalpha():
+							full_name.append('1')
+					full_name.append(name[k])
+						
+				if full_name[-1].isalpha():
+					full_name.append('1')
+
+				# write formulas in NDF way (with '?=')
+				if self.fitElementLayout.itemAt(i).widget().isChecked():
+					name = full_name
+
+					full_name = []
+					for n in name:
+						full_name.append(n)
+						if n.isalpha():
+							full_name.append('?=')
+
+				col_params[0] = ' '.join(full_name)
+				col_params[0] = col_params[0].replace('= ', '=')
+
+
+
 			mol = {
-				'name':col_params[0],
-				'density':col_params[1],
+				'name'		   : col_params[0],
+				'density'	   : col_params[1],
 				'concentration': [col_params[2], col_params[3]],
 				'depth': [col_params[4], col_params[5]]
 			}
-			col_params = []
 
 			molecules[i] = mol
+
+		print('NDF_gui, save_elements_box', molecules)
 
 
 		self.idf_file.set_elements(molecules)
 
 	def save_profile_box(self):
-		self.save_elements_box()
+		if self.debug: print('NDF_gui, save_profile_box begins')
+		# self.save_elements_box()
+		elements = self.idf_file.get_elements()
 
 		nrows = self.profile_table.rowCount()
 		ncols = self.profile_table.columnCount()
 
-		names = [self.elements_table.item(j,0).text() for j in range(ncols-1)]
+		names = []
+		# for j in range(ncols-1):
+		# 	element = self.elements_table.item(j,0)
+		# 	if element != None: names.append(element.text())
+		# names = [self.elements_table.item(j,0).text() for j in range(ncols-1)]
+
+		print('NDF_gui, save_profile_box, ', elements)
+		for key, param in elements.items():
+			if key == 'nelements':
+				continue
+
+			name = param['name'].replace('?=','')
+			names.append(name)
 
 		profile_dic = {'nlayers': nrows}
 		profile_dic['names'] = names
@@ -1863,7 +2058,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.idf_file.set_min_thickness(self.profile_min_thickness.text())
 		self.idf_file.set_max_thickness(self.profile_max_thickness.text())
 
-
+		print('NDF_gui, save_profile_box', profile_dic)
 
 
 
@@ -1994,7 +2189,14 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
+	def message_window(self):
+		msg = QMessageBox()
+		msg.setIcon(QMessageBox.Information)
+		msg.setWindowTitle("Error")
+		msg.setStandardButtons(QMessageBox.Ok)
+		# result = msg.exec_()
 
+		return msg
 
 	def load_advanced_inputs(self):
 		self.tabAdvanced.setCurrentIndex(0)
@@ -2385,6 +2587,8 @@ class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
 			return self.reactions
 		else:
 			return None
+
+
 
 
 

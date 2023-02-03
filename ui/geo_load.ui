@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1076</width>
-    <height>788</height>
+    <width>1232</width>
+    <height>804</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
@@ -18,7 +24,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>1076</width>
+    <width>9000</width>
     <height>9000</height>
    </size>
   </property>
@@ -937,8 +943,8 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>10</y>
-          <width>1031</width>
+          <y>20</y>
+          <width>1191</width>
           <height>321</height>
          </rect>
         </property>
@@ -1212,7 +1218,7 @@
           <rect>
            <x>320</x>
            <y>60</y>
-           <width>701</width>
+           <width>631</width>
            <height>251</height>
           </rect>
          </property>
@@ -1247,33 +1253,6 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="1" colspan="4">
-           <widget class="QComboBox" name="comboEnergyloss">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <item>
-             <property name="text">
-              <string>ZBL2000 (ZBL00)</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>ZBL1990 (ZBL90)</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>MSTAR (MSTAR)</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>SRIM 2003 (SR03)</string>
-             </property>
-            </item>
-           </widget>
-          </item>
           <item row="4" column="7">
            <widget class="QLineEdit" name="straggling_scaleparam">
             <property name="enabled">
@@ -1305,33 +1284,6 @@
             <property name="placeholderText">
              <string>Cutoff  a0  P(Cutoff)</string>
             </property>
-           </widget>
-          </item>
-          <item row="0" column="1" colspan="4">
-           <widget class="QComboBox" name="comboPileup">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <item>
-             <property name="text">
-              <string>Molodstov and Gurbich (MG - slow)</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Wielopolski and Gardner (WG - slow)</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Pure Autocorrelation Algorithm (CJ - fast)</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Amsel (GA - fast)</string>
-             </property>
-            </item>
            </widget>
           </item>
           <item row="0" column="0">
@@ -1439,7 +1391,58 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1" colspan="4">
+          <item row="8" column="0">
+           <widget class="QCheckBox" name="checkAdhoc_correction">
+            <property name="text">
+             <string>Ad-hoc Correction</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1" colspan="3">
+           <widget class="QComboBox" name="comboEnergyloss">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <item>
+             <property name="text">
+              <string>ZBL2000 (ZBL00)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>ZBL1990 (ZBL90)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>MSTAR (MSTAR)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>SRIM 2003 (SR03)</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="4" column="1" colspan="3">
+           <widget class="QComboBox" name="comboStraggling">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <item>
+             <property name="text">
+              <string>Chu Model</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Bohr Model</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="1" colspan="3">
            <widget class="QComboBox" name="comboDoublescatter">
             <property name="enabled">
              <bool>false</bool>
@@ -1466,28 +1469,31 @@
             </item>
            </widget>
           </item>
-          <item row="4" column="1" colspan="4">
-           <widget class="QComboBox" name="comboStraggling">
+          <item row="0" column="1" colspan="3">
+           <widget class="QComboBox" name="comboPileup">
             <property name="enabled">
              <bool>false</bool>
             </property>
             <item>
              <property name="text">
-              <string>Chu Model</string>
+              <string>Molodstov and Gurbich (MG - slow)</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>Bohr Model</string>
+              <string>Wielopolski and Gardner (WG - slow)</string>
              </property>
             </item>
-           </widget>
-          </item>
-          <item row="8" column="0">
-           <widget class="QCheckBox" name="checkAdhoc_correction">
-            <property name="text">
-             <string>Ad-hoc Correction</string>
-            </property>
+            <item>
+             <property name="text">
+              <string>Pure Autocorrelation Algorithm (CJ - fast)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Amsel (GA - fast)</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -1507,6 +1513,126 @@
           </property>
          </item>
         </widget>
+        <widget class="QGroupBox" name="groupBox_19">
+         <property name="geometry">
+          <rect>
+           <x>980</x>
+           <y>60</y>
+           <width>201</width>
+           <height>251</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Sample </string>
+         </property>
+         <widget class="QScrollArea" name="fitElementArea">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>181</width>
+            <height>131</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="verticalScrollBarPolicy">
+           <enum>Qt::ScrollBarAsNeeded</enum>
+          </property>
+          <property name="sizeAdjustPolicy">
+           <enum>QAbstractScrollArea::AdjustToContents</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>179</width>
+             <height>129</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>1</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="0">
+             <layout class="QFormLayout" name="fitElementLayout">
+              <property name="leftMargin">
+               <number>2</number>
+              </property>
+              <property name="topMargin">
+               <number>2</number>
+              </property>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QLineEdit" name="profile_max_thickness_2">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>210</y>
+            <width>67</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="placeholderText">
+           <string>Max: 0</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="profile_min_thickness_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>210</y>
+            <width>66</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="placeholderText">
+           <string>Min: 0</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_34">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>180</y>
+            <width>121</width>
+            <height>26</height>
+           </rect>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'monospace'; font-size:13px; color:#1a1aa6;&quot;&gt;In 1x10&lt;/span&gt;&lt;span style=&quot; font-family:'monospace'; font-size:13px; color:#1a1aa6; vertical-align:super;&quot;&gt;15 &lt;/span&gt;&lt;span style=&quot; font-family:'monospace'; font-size:13px; color:#1a1aa6;&quot;&gt;at/cm&lt;/span&gt;&lt;span style=&quot; font-family:'monospace'; font-size:13px; color:#1a1aa6; vertical-align:super;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Layer Thickness</string>
+          </property>
+         </widget>
+        </widget>
        </widget>
        <widget class="QPushButton" name="run_NDF_button">
         <property name="enabled">
@@ -1515,7 +1641,7 @@
         <property name="geometry">
          <rect>
           <x>950</x>
-          <y>630</y>
+          <y>640</y>
           <width>80</width>
           <height>23</height>
          </rect>
@@ -1531,7 +1657,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>360</y>
+          <y>370</y>
           <width>791</width>
           <height>301</height>
          </rect>
@@ -2337,7 +2463,7 @@
         <property name="geometry">
          <rect>
           <x>70</x>
-          <y>338</y>
+          <y>348</y>
           <width>961</width>
           <height>20</height>
          </rect>
@@ -2350,7 +2476,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>340</y>
+          <y>350</y>
           <width>59</width>
           <height>15</height>
          </rect>
@@ -2363,7 +2489,7 @@
         <property name="geometry">
          <rect>
           <x>820</x>
-          <y>630</y>
+          <y>640</y>
           <width>111</width>
           <height>23</height>
          </rect>
@@ -2376,7 +2502,7 @@
         <property name="geometry">
          <rect>
           <x>812</x>
-          <y>365</y>
+          <y>375</y>
           <width>221</width>
           <height>251</height>
          </rect>
@@ -2753,7 +2879,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1076</width>
+     <width>1232</width>
      <height>22</height>
     </rect>
    </property>
