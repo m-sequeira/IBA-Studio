@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
 	)
 # from PyQt5.QtCore.Qt import MatchContains
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 
 #from PyQt5.uic import loadUi
 
@@ -178,7 +179,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		# resize the element table columns with
 		horizontalHeader = self.elements_table.horizontalHeader()
 		# resize the first column to 100 pixels
-		horizontalHeader.resizeSection(0, 70)
+		horizontalHeader.resizeSection(0, 135)
 		horizontalHeader.resizeSection(1, 70)
 
 		#self.executable_dir = dirname(realpath(__file__)) + '/'
@@ -277,7 +278,10 @@ class Window(QMainWindow, Ui_MainWindow):
 		# window dynamics
 		self.elements_nelements.valueChanged.connect(self.resize_elements_table)
 		self.elements_nelements.valueChanged.connect(self.set_sample_fit_box)
+		self.elements_table.itemChanged.connect(self.set_sample_fit_box)
+		self.elements_table.itemChanged.connect(self.tidy_elements_table)
 		self.profile_nlayers.valueChanged.connect(self.resize_profile_table)
+		self.profile_table.itemChanged.connect(self.tidy_profile_table)
 		
 		self.comboSpectrum_id.currentIndexChanged.connect(self.onchange_spectrum_combo)
 		self.comboTechnique.currentIndexChanged.connect(self.reload_technique)
@@ -289,8 +293,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboSpectrum_id_results.currentIndexChanged.connect(self.onchange_spectrum_combo_results)
 
 		# self.tabWidget.currentChanged.connect(self.set_sample_fit_box)
-		self.elements_table.itemChanged.connect(self.set_sample_fit_box)
-		# self.elements_table.keyPressEvent = self.onclick_elements_table
 
 
 
@@ -471,12 +473,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboSpectrum_id_results.blockSignals(False)
 
 
-		# ['Spectrum %i' %i for i in range(1, 1 + self.nspectra)]
-		# if append:
-		#   self.comboSpectrum_id.addItem(list_names)
-		# else:
-		#   
-
 	def update_comboSimulations(self):
 		self.nsims = self.idf_file.get_number_of_simulations(spectra_id = self.spectra_id)
 		reactions = self.idf_file.get_reactions(spectra_id = self.spectra_id)
@@ -528,7 +524,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.runList.addItems(prev_names)
 		self.runList.blockSignals(False)
 		
-		
 
 	
 	def edit_reactions_window(self):
@@ -551,26 +546,8 @@ class Window(QMainWindow, Ui_MainWindow):
 	def open(self, fileName = ''):
 		if fileName == False:
 		  options = QFileDialog.Options()
-		  fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "All Files (*)", options=options)
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/GUI/test/IAEA25_NDF.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/Rui_files/RBS1SS.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/GUI/test/ERDSS.xml'
-		# fileName = '/media/msequeira/Backup3/Windows10/IDF_python/GUI/test_ndf/Kat_sim_fit_param_Ubuntu/kat_sim_param.xml'
-		# fileName = '/media/msequeira/Backup3/Windows10/IDF_python/GUI/test_ndf/Kat_sim_fit_correct_v2/Kat_1spectrum.xml'
-		# fileName = '/media/msequeira/Backup3/Windows10/IDF_python/GUI/test_ndf/Kat_sim_fit_correct_v2/kat_2ndSpectrum.xml'
-		# fileName = '/media/msequeira/Backup3/Windows10/IDF_python/GUI/test_ndf/Kat_sim_fit_correct_v3/kat_2ndSpectrum.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/Nuno_files/SIMS_IDF/IDF_combined.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/Nuno_files/SIMS_IDF/IDF_combined_rbsless.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/GUI/multi_spectra_files/Katharina_files/combined_appended.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/Nuno_files/SIMS_IDF/files_used_in_idf/IDF_combined_v2.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/GUI/multi_spectra_files/Katharina_files/kat_2ndSpectrum_newIDFV.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/Nuno_files/SIMS_IDF/files_used_in_idf/IDF_combined_v2_IDFViewer.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/testing/multi_files_v2/combined_4spectra.xml'
-		# fileName = '/media/msequeira/Backup3/Windows10/IDF_python/GUI/test_ndf/Kat_sim_fit_correct_test_jupyter/kat_2ndSpectrum.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/GUI/test/pyIDF/documentation/source/jupyter_notebooks/Example3/idf_example3_1.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/GUI/test/pyIDF/documentation/source/jupyter_notebooks/advanced_examples/Example_a1/IDF_multi_techinques.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/GUI/test/pyIDF/documentation/source/jupyter_notebooks/Example1/idf_example1.xml'
-		# fileName = '/home/msequeira/Dropbox/CTN/Radiate/IDF_python/IDF2NDF/test.xml'
+		  fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml)", options=options)
+		 
 
 		if fileName != '':
 			self.path = fileName
@@ -745,7 +722,8 @@ class Window(QMainWindow, Ui_MainWindow):
 				rmtree(d)
 
 	def remove_results_from_IDF(self):
-		self.idf_file.remove_results_from_IDF()
+		for spectra in range(self.nspectra):
+			self.idf_file.remove_results_from_IDF(spectra_id = spectra)
 
 		self.reset_results_box()
 
@@ -832,7 +810,10 @@ class Window(QMainWindow, Ui_MainWindow):
 								"{"
 								"}")
 
-		# self.reset_results_box()
+		while self.fitElementLayout.count():
+			child = self.fitElementLayout.takeAt(0)
+			if child.widget():
+				child.widget().deleteLater()
 
 		labels = ['Thickness'] + ['']*self.profile_table_fit_result.columnCount()
 		self.profile_table_fit_result.setHorizontalHeaderLabels(labels)
@@ -1108,7 +1089,6 @@ class Window(QMainWindow, Ui_MainWindow):
 				if p['param'] is not None: 
 					if not isinstance(param, str): param = str(param)
 					p['param'].setText(param)
-
 
 
 	def set_sample_fit_box(self):
@@ -1468,7 +1448,7 @@ class Window(QMainWindow, Ui_MainWindow):
 	def load_spectrum(self, spectra_id=False, fileName = False):
 		if fileName == False:
 			options = QFileDialog.Options()
-			fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
+			fileName, _ = QFileDialog.getOpenFileName(self, "Open spectrum file...", ""	, "All Files (*)", options=options)
 		
 
 		if spectra_id == False:
@@ -1747,7 +1727,7 @@ class Window(QMainWindow, Ui_MainWindow):
 				print('NDF_gui, set_elements_box clean name:', param['name'])
 				fitted = True
 
-			item = QTableWidgetItem(param['name']) 
+			item = QTableWidgetItem(param['name'])
 			self.elements_table.setItem(i,0,item)
 			item = QTableWidgetItem(str(param['density'])) 
 			self.elements_table.setItem(i,1,item)
@@ -1767,6 +1747,20 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 			i+=1
+
+	def tidy_elements_table(self):
+		font = QFont()
+		font.setBold(True)
+		
+		for i in range(self.elements_table.rowCount()):
+			for j in range(self.elements_table.columnCount()):
+				item = self.elements_table.item(i, j)
+				if item is not None:
+					if j == 0:
+						item.setFont(font)
+					item.setTextAlignment(Qt.AlignCenter)
+
+
 	
 	def set_profile_box(self):
 		if self.debug: print('NDF_gui, set_profile_box begins')
@@ -1819,6 +1813,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.profile_min_thickness.setText(self.idf_file.get_min_thickness())
 		self.profile_max_thickness.setText(self.idf_file.get_max_thickness())
+
+	def tidy_profile_table(self):		
+		for i in range(self.profile_table.rowCount()):
+			for j in range(self.profile_table.columnCount()):
+				item = self.profile_table.item(i, j)
+				if item is not None:
+					item.setTextAlignment(Qt.AlignCenter)
 
 			
 	def set_element_color(self, qElement, qType):

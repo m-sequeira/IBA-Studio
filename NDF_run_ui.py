@@ -14,7 +14,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
+        MainWindow.setWindowModality(QtCore.Qt.NonModal)
         MainWindow.resize(629, 305)
+        MainWindow.setMinimumSize(QtCore.QSize(629, 305))
+        MainWindow.setMaximumSize(QtCore.QSize(629, 305))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
@@ -26,7 +29,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 245, 177))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 245, 175))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -92,7 +95,7 @@ class Ui_MainWindow(object):
         self.closeButton.setObjectName("closeButton")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 629, 20))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 629, 22))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
 
