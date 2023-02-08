@@ -2832,53 +2832,85 @@
        <widget class="QPushButton" name="pushSave_advanced_inputs">
         <property name="geometry">
          <rect>
-          <x>710</x>
-          <y>6</y>
-          <width>81</width>
+          <x>1070</x>
+          <y>100</y>
+          <width>130</width>
           <height>23</height>
          </rect>
         </property>
         <property name="text">
-         <string>Save </string>
+         <string>Save...</string>
         </property>
        </widget>
        <widget class="QPushButton" name="pushSaveAs_advanced_inputs">
         <property name="geometry">
          <rect>
-          <x>799</x>
-          <y>6</y>
-          <width>81</width>
+          <x>1070</x>
+          <y>130</y>
+          <width>130</width>
           <height>23</height>
          </rect>
         </property>
         <property name="text">
-         <string>Save as </string>
+         <string>Save as ...</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="run_NDF_button_advanced">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>1070</x>
+          <y>250</y>
+          <width>130</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Run NDF...</string>
+        </property>
+        <property name="default">
+         <bool>true</bool>
         </property>
        </widget>
        <widget class="Line" name="line_8">
         <property name="geometry">
          <rect>
-          <x>890</x>
-          <y>6</y>
-          <width>20</width>
-          <height>21</height>
+          <x>1075</x>
+          <y>80</y>
+          <width>120</width>
+          <height>3</height>
          </rect>
         </property>
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Horizontal</enum>
         </property>
        </widget>
        <widget class="Line" name="line_9">
         <property name="geometry">
          <rect>
-          <x>680</x>
-          <y>6</y>
-          <width>20</width>
-          <height>21</height>
+          <x>1075</x>
+          <y>200</y>
+          <width>120</width>
+          <height>3</height>
          </rect>
         </property>
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushOpenFolder_advanced">
+        <property name="geometry">
+         <rect>
+          <x>1070</x>
+          <y>160</y>
+          <width>130</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Open Folder...</string>
         </property>
        </widget>
       </widget>

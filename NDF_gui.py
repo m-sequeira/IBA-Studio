@@ -82,12 +82,43 @@ class Window(QMainWindow, Ui_MainWindow):
 					element = ''
 
 				menu_items.append('%i: %s' %(i+1, element))
+		elif button.objectName() == 'copySpectra_button':
+			menu.triggered.connect(lambda x: self.copy_geo_spectra(x.text().split(':')[0] ))
+			menu_items = ['All']
+			menu_items += self.idf_file.get_all_spectra_filenames()
+
+			current_spectrum = self.comboSpectrum_id.currentText()
+			try:
+				menu_items.remove(current_spectrum)
+			except:
+				pass
+
+
 			
 
 		for item in menu_items:
 			menu.addAction(item)
 
+			# submenu = QMenu()
+			# item_menu.addMenu(submenu)
+
+			# submenu.addAction('All')
+			# submenu.addAction('Energy')
+
+			
+
+
 		return menu
+
+	def copy_geo_spectra(self, target_spectra_id):
+		if target_spectra_id == 'All':
+			target_spectra_id = range(self.nspectra)
+			for spectra_id in target_spectra_id:
+				self.save_geometry_box(target_spectra_id = spectra_id)
+
+		else:
+			target_spectra_id = int(target_spectra_id)
+			self.save_geometry_box(target_spectra_id = target_spectra_id)
 
 
 	def copy_elements_output2input(self, element):
@@ -97,12 +128,11 @@ class Window(QMainWindow, Ui_MainWindow):
 			id_elements = [int(element.split(':')[0]) - 1]
 
 		for id_element in id_elements:
-			initial_value = self.elements_table_fit_result_initial.item(id_element, 0).text()
+			# initial_value = self.elements_table_fit_result_initial.item(id_element, 0).text()
 			final_value = self.elements_table_fit_result.item(id_element, 0).text()
 
-			if '?=' in initial_value:
-				final_value = set_element_fit_symbol(final_value)
-
+			# if '?=' in initial_value:
+			# 	final_value = set_element_fit_symbol(final_value)
 			self.elements_table.item(id_element, 0).setText(final_value)
 
 		
@@ -184,7 +214,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		#self.executable_dir = dirname(realpath(__file__)) + '/'
 		self.executable_dir = osjoin(dirname(__file__), 'pyIBA') + '/'
-		#print(self.executable_dir)
 
 		self.error_window = self.message_window()
 
@@ -362,6 +391,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.spectra_id = curr_index
 
 
+
 	def onchange_reaction(self):
 		if self.comboReactions.currentText() == 'Edit reactions...':
 			self.edit_reactions_window()
@@ -422,8 +452,9 @@ class Window(QMainWindow, Ui_MainWindow):
 		try:
 			self.update_comboSimulations()
 			self.reload_spectra_box()       
-			self.reload_models_box()
+			# self.reload_models_box()
 			self.reload_technique()
+			self.add_menu_to_button(self.copySpectra_button)
 		except Exception as e:
 			if self.debug: raise e
 
@@ -471,6 +502,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboSpectrum_id_results.clear()
 		self.comboSpectrum_id_results.addItems(name_list)
 		self.comboSpectrum_id_results.blockSignals(False)
+
 
 
 	def update_comboSimulations(self):
@@ -547,7 +579,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		if fileName == False:
 		  options = QFileDialog.Options()
 		  fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml)", options=options)
-		 
+
 
 		if fileName != '':
 			self.path = fileName
@@ -776,6 +808,8 @@ class Window(QMainWindow, Ui_MainWindow):
 			except Exception as e:
 				if self.debug: raise e
 				pass
+
+			self.add_menu_to_button(self.copySpectra_button)
 
 
 		if self.debug: print('NDF_gui, reload_window - reloading ends')
@@ -1849,10 +1883,15 @@ class Window(QMainWindow, Ui_MainWindow):
 			{'field': self.geo_solid_angle, 'method': self.idf_file.set_detector_solid_angle},
 		]
 
+		if target_spectra_id == '':
+			spectra_id = self.spectra_id
+		else:
+			spectra_id = target_spectra_id
+
 		for p in pairs:
 			value = p['field'].text()
 			if value != '-':
-				p['method'](value, spectra_id=self.spectra_id)
+				p['method'](value, spectra_id=spectra_id)
 
 		# energy = self.geo_energy.text()
 		# self.idf_file.set_beam_energy(energy, spectra_id=self.spectra_id)
@@ -1921,17 +1960,13 @@ class Window(QMainWindow, Ui_MainWindow):
 				col_params.append(param_text)
 
 			if col_params == ['', '', '', '', '', '']:
-				print('NDF_gui, save_elements_box, delete_row', i, col_params)
-				# row = self.elements_table.param.row()
 				rows_del.append(i)
 				
 				
 		for row in rows_del:
 			self.elements_table.removeRow(row)
 
-		print('NDF_gui, save_elements_box, old nrows', nrows)
 		nrows = nrows - len(rows_del)
-		print('NDF_gui, save_elements_box, new nrows', nrows)
 		self.elements_nelements.setValue(nrows)
 				
 
@@ -1947,8 +1982,6 @@ class Window(QMainWindow, Ui_MainWindow):
 				col_params.append(param)
 
 			name = col_params[0]
-
-			print('NDF_gui, save_elements_box, ', col_params)
 
 			
 
@@ -2003,8 +2036,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 			molecules[i] = mol
 
-		print('NDF_gui, save_elements_box', molecules)
-
 
 		self.idf_file.set_elements(molecules)
 
@@ -2017,12 +2048,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		ncols = self.profile_table.columnCount()
 
 		names = []
-		# for j in range(ncols-1):
-		# 	element = self.elements_table.item(j,0)
-		# 	if element != None: names.append(element.text())
-		# names = [self.elements_table.item(j,0).text() for j in range(ncols-1)]
 
-		print('NDF_gui, save_profile_box, ', elements)
 		for key, param in elements.items():
 			if key == 'nelements':
 				continue
@@ -2058,8 +2084,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		# save minimum thickness
 		self.idf_file.set_min_thickness(self.profile_min_thickness.text())
 		self.idf_file.set_max_thickness(self.profile_max_thickness.text())
-
-		print('NDF_gui, save_profile_box', profile_dic)
 
 
 
