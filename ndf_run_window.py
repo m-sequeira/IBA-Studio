@@ -13,14 +13,14 @@ from time import sleep
 
 
 from PyQt5.QtWidgets import (
-	QApplication, QLabel, QLineEdit, QFormLayout,
+	QApplication, QLabel, QLineEdit, QFormLayout,QShortcut,
 	 QDialog, QMainWindow, QMessageBox,
 	QFileDialog, QTableWidgetItem, 
 	QLineEdit, QComboBox, QWidget, QTableWidget, QPlainTextEdit, QVBoxLayout,
 	QCheckBox, QSpacerItem
 	)
-# from PyQt5.QtCore.Qt import MatchContains
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeySequence
+from PyQt5.QtCore import Qt, pyqtSlot
 
 syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
@@ -55,6 +55,21 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.comboRun_speed.currentIndexChanged.connect(self.tcn_warning)
 
+		QShortcut(
+			QKeySequence("Escape"), self, activated=self.on_Escape
+		)
+		QShortcut(
+			QKeySequence("Return"), self, activated=self.on_Enter
+		)
+
+	@pyqtSlot()
+	def on_Escape(self):
+		self.close_window()
+
+	@pyqtSlot()
+	def on_Enter(self):
+		print('enter')
+		self.run_ndf()
 
 	def update_idf_file_version(self):
 		self.idf_file = self.main_window.idf_file
@@ -317,7 +332,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def add_tcn_file(self):
 		options = QFileDialog.Options()
-		fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "All Files (*)", options=options)
+		fileName, _ = QFileDialog.getOpenFileName(self, "Add TCN file", "", "tcn files (*.tcn)", options=options)
 
 		if fileName != '':
 			copyfile(fileName, self.idf_file.path_dir + 'ndf.tcn')

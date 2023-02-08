@@ -23,9 +23,6 @@ from PyQt5.QtGui import QFont
 
 #from PyQt5.uic import loadUi
 
-from numpy import loadtxt, savetxt, array as nparray
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 
 from main_window_ui import Ui_MainWindow
 from about_window_ui import Ui_dialog_about
@@ -33,12 +30,16 @@ from ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
 from reactions_ui import Ui_Dialog as Ui_Reactions_Dialog
 from ndf_run_window import Window as NDF_Window
 
-
 syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
 from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol, pretty_formula_ratio
 from NDF_project import project, load as load_project
 from Settings import settings
+from NDF_advanced import NDF_advanced
+
+from numpy import loadtxt, savetxt, array as nparray
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 
 
 class Window(QMainWindow, Ui_MainWindow):
@@ -251,6 +252,9 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.new()
 
 		self.open()
+
+		self.advanced_tab = NDF_advanced(self)
+
 		
 	def new(self):
 		self.idf_file = IDF()
@@ -258,11 +262,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.ndf_window = NDF_Window(self)
 		self.path = None
 		self.path_dir = None
-		self.path_advanced = None
 		self.setWindowTitle('IDF Viewer: New file')
 		self.reset_window()
 		self.update_runList()
 		
+
 
 		
 
@@ -331,11 +335,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboSimulation.view().pressed.connect(self.save_state)
 		# self.tabWidget.currentChanged.connect(self.save_state)
 
-		# advanced tab
-		self.pushLoad_advanced_inputs.clicked.connect(self.load_advanced_inputs)
-		self.pushSave_advanced_inputs.clicked.connect(self.save_advanced)
-		self.pushSaveAs_advanced_inputs.clicked.connect(self.save_as_advanced)
-		self.pushLoad_results_advanced.clicked.connect(self.load_results_advanced)
 
 
 	def onclick_profile(self,event):
@@ -348,10 +347,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.new_windows.append(NDF_Fit_Figure(self))
 		self.new_windows[-1].show()
 		self.new_windows[-1].setWindowTitle('Fit: %s' %self.runList.currentItem().text())
-
-	def onclick_spectra_fit_result_advanced(self,event):
-		self.new_windows.append(NDF_Fit_Figure(self, type = 'advanced'))
-		self.new_windows[-1].show()
 
 
 	def onclick_spectrum(self,event):
@@ -1872,7 +1867,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.idf_file.set_user(user)
 		self.idf_file.set_note(notes)
 
-	def save_geometry_box(self):
+	def save_geometry_box(self, target_spectra_id = ''):
 		pairs = [
 			{'field': self.geo_energy, 'method': self.idf_file.set_beam_energy},
 			{'field': self.geo_fwhm, 'method': self.idf_file.set_beam_energy_spread},
@@ -2223,208 +2218,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		return msg
 
-	def load_advanced_inputs(self):
-		self.tabAdvanced.setCurrentIndex(0)
-
-		self.save()
-		self.paths_advanced = self.idf_file.export_ndf_inputs(path_dir = self.path_dir)
-		self.load_advanced_geo_input(self.paths_advanced['geo_files'])
-		self.load_advanced_str_input(self.paths_advanced['str_files'])
-
-		if None not in self.paths_advanced['prf_files']:
-			self.load_advanced_prf_input(self.paths_advanced['prf_files'])
-		self.load_advanced_spc_input(self.paths_advanced['spc_files'])
-
-		try:
-			self.load_advanced_tcn_input()
-		except Exception as e:
-			msg = QMessageBox()
-			msg.setIcon(QMessageBox.Information)
-
-			msg.setText("ndf.tcn file not found")
-			# msg.setInformativeText("This is additional information")
-			msg.setWindowTitle("Warning: ndf.tcn")
-			# msg.setDetailedText("The details are as follows:")
-			msg.setStandardButtons(QMessageBox.Open | QMessageBox.Cancel)
-			buttonAdd = msg.button(QMessageBox.Open)
-			buttonAdd.setText('Add file')
-			# buttonAdd.clicked(self.add_tcn_file)
-
-			# buttonN = box.button(QMessageBox.Cancel)
-			# buttonN.setText('Iptal')
-
-
-			result = msg.exec_()
-			if result == QMessageBox.Open:
-				tcn_filename = self.add_tcn_file()
-
-				if tcn_filename != '':
-					self.load_advanced_tcn_input()
-
-
-
-	def load_advanced_geo_input(self, files_path):
-		geo_filename = files_path[0]
-
-		with open(self.path_dir + geo_filename, 'r') as file:
-			data = file.readlines()
-		
-		self.advanced_geo_input_field.clear()
-		self.advanced_geo_input_field.insertPlainText(''.join(data))
-
-	def load_advanced_str_input(self, files_path):
-		str_filename = files_path[0]
-
-		with open(self.path_dir + str_filename, 'r') as file:
-			data = file.readlines()
-		
-		self.advanced_str_input_field.clear()
-		self.advanced_str_input_field.insertPlainText(''.join(data))
-
-	def load_advanced_prf_input(self, files_path):  
-		prf_filename = files_path[0]
-
-		with open(self.path_dir + prf_filename, 'r') as file:
-			data = file.readlines()
-		
-		self.advanced_prf_input_field.clear()
-		self.advanced_prf_input_field.insertPlainText(''.join(data))
-
-	def load_advanced_spc_input(self, files_path):
-		spc_filename = files_path[0]
-
-		with open(self.path_dir + spc_filename, 'r') as file:
-			data = file.readlines()
-		
-		self.advanced_spc_input_field.clear()
-		self.advanced_spc_input_field.insertPlainText(''.join(data))
-
-	def load_advanced_tcn_input(self):
-		tcn_filename = 'ndf.tcn'
-
-		with open(self.path_dir + tcn_filename, 'r') as file:
-			data = file.readlines()
-		
-		self.advanced_tcn_input_field.clear()
-		self.advanced_tcn_input_field.insertPlainText(''.join(data))
-
-
-	
-
-	def save_as_advanced(self):
-		# fileName,_ = QFileDialog.getSaveFileName(self, 'Save File')
-		fileName = QFileDialog.getExistingDirectory(self, "Select Folder")
-		
-		if fileName != '':
-
-			self.path_advanced = fileName
-			# self.path_dir = '/'.join(self.path_advanced.split('/')[:-1]) + '/'
-			# self.file = self.path.split('/')[-1]
-
-			print('Save file...')
-			print('Path: %s' %self.path_advanced)
-
-			self.save_advanced()
-
-
-
-
-	def save_advanced(self):
-		if self.path_advanced is None:
-			self.save_as_advanced()
-			return
-
-		pairs = {
-			self.paths_advanced['geo_files'][0] : self.advanced_geo_input_field,
-			self.paths_advanced['str_files'][0] : self.advanced_str_input_field,
-			self.paths_advanced['prf_files'][0] : self.advanced_prf_input_field,
-			self.paths_advanced['spc_files'][0] : self.advanced_spc_input_field,
-			'ndf.tcn': self.advanced_tcn_input_field
-
-		}
-
-		for k,field in pairs.items():
-			text = field.toPlainText()
-			if k != None:
-				with open(self.path_advanced + '/' + k, 'w') as file:
-					file.write(text)
-
-
-				print(self.path_advanced + '/' + k, 'saved')
-
-
-
-		for dat in self.paths_advanced['dataxy_files']:
-			copyfile(self.path_dir + dat, self.path_advanced + '/' + dat)
-
-			print(self.path_advanced + '/' + dat, 'saved')
-
-
-	def load_results_advanced(self):
-		try:
-			self.tabAdvanced.setCurrentIndex(1)
-			pairs = {
-					self.results_geometry: '%sg0101.geo' %self.file[:3],
-					self.results_elements: '%ss01.str' %self.file[:3],
-					self.results_profile: '%s01.prf' %self.file[:3]
-					}
-
-			for field, filename in pairs.items():       
-				res_filename = self.path_advanced + '/' + filename
-
-				with open(res_filename, 'r') as file:
-					data = file.readlines()
-				
-				field.clear()
-				field.insertPlainText(''.join(data))
-
-
-			self.set_spectra_fit_result_advanced()
-
-			
-
-		except Exception as e:
-			if self.debug: raise e
-			print('Result files not found')
-			msg = QMessageBox()
-			msg.setIcon(QMessageBox.Information)
-
-			msg.setText("Result files not found")
-			# msg.setInformativeText("Showing IDF raw results instead")
-			msg.setWindowTitle("Error")
-			# msg.setDetailedText("The details are as follows:")
-			msg.setStandardButtons(QMessageBox.Ok)
-			# buttonAdd = msg.button(QMessageBox.Open)
-			result = msg.exec_()
-
-	def set_spectra_fit_result_advanced(self):
-		res_filename = '%sf0101.dat' %self.file[:3]
-
-		data = loadtxt(self.path_advanced + '/' + res_filename, skiprows = 7)
-
-		data_x_given = data_x_fit = data[:,0]
-		data_y_given = data[:,1]
-		data_y_fit = data[:,2]
-
-		if data_x_fit is None: return
-
-
-		self.figure_result_advanced.clear()
-		
-		ax_result = self.figure_result_advanced.add_subplot(111)
-
-		ax_result.plot(data_x_given, data_y_given, 'x', label = 'Exp.')
-		ax_result.plot(data_x_fit, data_y_fit, label = 'Fit')
-		
-		ax_result.set_yticklabels([])
-		ax_result.set_xlabel('Energy (Channels)')
-		ax_result.legend(frameon=False)
-		self.figure_result_advanced.tight_layout()
-
-
-
-		self.canvas_result_advanced.draw()
-
 
 class IDF_spectrum_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 	def __init__(self, main_window, parent=None):
@@ -2481,6 +2274,7 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 			Window.set_profile_fit_result_plot(self, profile_params)
 			self.ax_profile.set_ylim(-5, 120)
 			self.figure_profile.tight_layout()
+
 
 
 class About_Window(QMainWindow, Ui_dialog_about):

@@ -48,7 +48,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -927,6 +927,32 @@
           </property>
          </item>
         </widget>
+        <widget class="QPushButton" name="copySpectra_button">
+         <property name="geometry">
+          <rect>
+           <x>460</x>
+           <y>30</y>
+           <width>80</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Copy to...</string>
+         </property>
+        </widget>
+        <widget class="Line" name="line_10">
+         <property name="geometry">
+          <rect>
+           <x>437</x>
+           <y>30</y>
+           <width>20</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_3">
@@ -1647,7 +1673,7 @@
          </rect>
         </property>
         <property name="text">
-         <string>Run NDF</string>
+         <string>Run NDF...</string>
         </property>
         <property name="default">
          <bool>true</bool>
@@ -2531,7 +2557,7 @@
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>Advanced</string>
+        <string>NDF - Classic</string>
        </attribute>
        <widget class="QTabWidget" name="tabAdvanced">
         <property name="geometry">
@@ -2539,7 +2565,7 @@
           <x>10</x>
           <y>10</y>
           <width>1041</width>
-          <height>621</height>
+          <height>661</height>
          </rect>
         </property>
         <property name="currentIndex">
@@ -2576,7 +2602,7 @@
             <rect>
              <x>10</x>
              <y>30</y>
-             <width>131</width>
+             <width>220</width>
              <height>23</height>
             </rect>
            </property>
@@ -2590,7 +2616,7 @@
          <widget class="QGroupBox" name="groupBox_13">
           <property name="geometry">
            <rect>
-            <x>519</x>
+            <x>520</x>
             <y>7</y>
             <width>511</width>
             <height>281</height>
@@ -2602,7 +2628,7 @@
           <widget class="QPlainTextEdit" name="advanced_str_input_field">
            <property name="geometry">
             <rect>
-             <x>12</x>
+             <x>10</x>
              <y>30</y>
              <width>491</width>
              <height>241</height>
@@ -2614,9 +2640,9 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>294</y>
+            <y>290</y>
             <width>501</width>
-            <height>141</height>
+            <height>161</height>
            </rect>
           </property>
           <property name="title">
@@ -2625,10 +2651,10 @@
           <widget class="QPlainTextEdit" name="advanced_prf_input_field">
            <property name="geometry">
             <rect>
-             <x>12</x>
+             <x>10</x>
              <y>30</y>
              <width>481</width>
-             <height>101</height>
+             <height>121</height>
             </rect>
            </property>
           </widget>
@@ -2637,9 +2663,9 @@
           <property name="geometry">
            <rect>
             <x>519</x>
-            <y>294</y>
+            <y>290</y>
             <width>511</width>
-            <height>281</height>
+            <height>328</height>
            </rect>
           </property>
           <property name="title">
@@ -2651,7 +2677,7 @@
              <x>12</x>
              <y>30</y>
              <width>491</width>
-             <height>241</height>
+             <height>287</height>
             </rect>
            </property>
           </widget>
@@ -2660,9 +2686,9 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>440</y>
+            <y>460</y>
             <width>501</width>
-            <height>131</height>
+            <height>161</height>
            </rect>
           </property>
           <property name="title">
@@ -2674,7 +2700,7 @@
              <x>12</x>
              <y>30</y>
              <width>481</width>
-             <height>91</height>
+             <height>121</height>
             </rect>
            </property>
           </widget>
@@ -2688,20 +2714,20 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>10</y>
-            <width>512</width>
-            <height>287</height>
+            <y>7</y>
+            <width>501</width>
+            <height>281</height>
            </rect>
           </property>
           <property name="title">
            <string>geo file</string>
           </property>
-          <widget class="QComboBox" name="comboBox_Advanced_2">
+          <widget class="QComboBox" name="comboBox_results_Advanced">
            <property name="geometry">
             <rect>
              <x>10</x>
              <y>30</y>
-             <width>131</width>
+             <width>220</width>
              <height>23</height>
             </rect>
            </property>
@@ -2716,8 +2742,8 @@
             <rect>
              <x>10</x>
              <y>60</y>
-             <width>491</width>
-             <height>221</height>
+             <width>481</width>
+             <height>211</height>
             </rect>
            </property>
            <property name="textInteractionFlags">
@@ -2728,10 +2754,10 @@
          <widget class="QGroupBox" name="groupBox_16">
           <property name="geometry">
            <rect>
-            <x>530</x>
-            <y>10</y>
-            <width>501</width>
-            <height>287</height>
+            <x>520</x>
+            <y>7</y>
+            <width>511</width>
+            <height>281</height>
            </rect>
           </property>
           <property name="title">
@@ -2742,8 +2768,8 @@
             <rect>
              <x>10</x>
              <y>30</y>
-             <width>481</width>
-             <height>251</height>
+             <width>491</width>
+             <height>241</height>
             </rect>
            </property>
            <property name="textInteractionFlags">
@@ -2755,9 +2781,9 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>300</y>
-            <width>511</width>
-            <height>271</height>
+            <y>290</y>
+            <width>501</width>
+            <height>331</height>
            </rect>
           </property>
           <property name="title">
@@ -2768,8 +2794,8 @@
             <rect>
              <x>10</x>
              <y>30</y>
-             <width>491</width>
-             <height>231</height>
+             <width>481</width>
+             <height>291</height>
             </rect>
            </property>
            <property name="textInteractionFlags">
@@ -2780,10 +2806,10 @@
          <widget class="QGroupBox" name="groupBox_27">
           <property name="geometry">
            <rect>
-            <x>530</x>
-            <y>300</y>
-            <width>501</width>
-            <height>271</height>
+            <x>520</x>
+            <y>290</y>
+            <width>511</width>
+            <height>331</height>
            </rect>
           </property>
           <property name="title">
@@ -2795,7 +2821,7 @@
              <x>0</x>
              <y>20</y>
              <width>501</width>
-             <height>251</height>
+             <height>311</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="spectra_result_plot_advanced"/>
@@ -2804,11 +2830,14 @@
         </widget>
        </widget>
        <widget class="QPushButton" name="pushLoad_results_advanced">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="geometry">
          <rect>
-          <x>920</x>
-          <y>6</y>
-          <width>111</width>
+          <x>1070</x>
+          <y>220</y>
+          <width>130</width>
           <height>23</height>
          </rect>
         </property>
@@ -2819,9 +2848,9 @@
        <widget class="QPushButton" name="pushLoad_advanced_inputs">
         <property name="geometry">
          <rect>
-          <x>536</x>
-          <y>6</y>
-          <width>131</width>
+          <x>1070</x>
+          <y>40</y>
+          <width>130</width>
           <height>23</height>
          </rect>
         </property>
@@ -3180,12 +3209,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>181</x>
-     <y>476</y>
+     <x>192</x>
+     <y>545</y>
     </hint>
     <hint type="destinationlabel">
-     <x>181</x>
-     <y>476</y>
+     <x>192</x>
+     <y>545</y>
     </hint>
    </hints>
   </connection>
@@ -3196,12 +3225,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>52</x>
-     <y>195</y>
+     <x>75</x>
+     <y>227</y>
     </hint>
     <hint type="destinationlabel">
-     <x>164</x>
-     <y>195</y>
+     <x>224</x>
+     <y>228</y>
     </hint>
    </hints>
   </connection>
@@ -3212,8 +3241,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>79</x>
-     <y>310</y>
+     <x>102</x>
+     <y>338</y>
     </hint>
     <hint type="destinationlabel">
      <x>219</x>
@@ -3228,12 +3257,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>47</x>
-     <y>228</y>
+     <x>70</x>
+     <y>264</y>
     </hint>
     <hint type="destinationlabel">
-     <x>174</x>
-     <y>228</y>
+     <x>224</x>
+     <y>265</y>
     </hint>
    </hints>
   </connection>
@@ -3244,12 +3273,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>74</x>
-     <y>310</y>
+     <x>97</x>
+     <y>338</y>
     </hint>
     <hint type="destinationlabel">
      <x>305</x>
-     <y>311</y>
+     <y>339</y>
     </hint>
    </hints>
   </connection>
@@ -3260,8 +3289,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>361</x>
-     <y>206</y>
+     <x>384</x>
+     <y>229</y>
     </hint>
     <hint type="destinationlabel">
      <x>511</x>
@@ -3276,12 +3305,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>361</x>
-     <y>206</y>
+     <x>384</x>
+     <y>229</y>
     </hint>
     <hint type="destinationlabel">
-     <x>821</x>
-     <y>201</y>
+     <x>905</x>
+     <y>230</y>
     </hint>
    </hints>
   </connection>
@@ -3292,8 +3321,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>361</x>
-     <y>206</y>
+     <x>384</x>
+     <y>229</y>
     </hint>
     <hint type="destinationlabel">
      <x>921</x>
@@ -3356,12 +3385,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>101</x>
-     <y>266</y>
+     <x>124</x>
+     <y>301</y>
     </hint>
     <hint type="destinationlabel">
-     <x>152</x>
-     <y>264</y>
+     <x>224</x>
+     <y>302</y>
     </hint>
    </hints>
   </connection>
@@ -3372,12 +3401,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>117</x>
-     <y>271</y>
+     <x>140</x>
+     <y>301</y>
     </hint>
     <hint type="destinationlabel">
-     <x>264</x>
-     <y>267</y>
+     <x>305</x>
+     <y>302</y>
     </hint>
    </hints>
   </connection>
@@ -3388,8 +3417,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>433</x>
-     <y>293</y>
+     <x>456</x>
+     <y>317</y>
     </hint>
     <hint type="destinationlabel">
      <x>520</x>
@@ -3404,12 +3433,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>411</x>
-     <y>330</y>
+     <x>434</x>
+     <y>361</y>
     </hint>
     <hint type="destinationlabel">
-     <x>532</x>
-     <y>330</y>
+     <x>708</x>
+     <y>362</y>
     </hint>
    </hints>
   </connection>
@@ -3420,8 +3449,8 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>450</x>
-     <y>380</y>
+     <x>473</x>
+     <y>405</y>
     </hint>
     <hint type="destinationlabel">
      <x>510</x>
@@ -3436,12 +3465,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>390</x>
-     <y>382</y>
+     <x>413</x>
+     <y>405</y>
     </hint>
     <hint type="destinationlabel">
-     <x>565</x>
-     <y>380</y>
+     <x>705</x>
+     <y>406</y>
     </hint>
    </hints>
   </connection>
@@ -3452,12 +3481,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>399</x>
-     <y>380</y>
+     <x>422</x>
+     <y>405</y>
     </hint>
     <hint type="destinationlabel">
-     <x>723</x>
-     <y>371</y>
+     <x>799</x>
+     <y>406</y>
     </hint>
    </hints>
   </connection>
@@ -3468,12 +3497,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>395</x>
-     <y>379</y>
+     <x>418</x>
+     <y>405</y>
     </hint>
     <hint type="destinationlabel">
-     <x>788</x>
-     <y>385</y>
+     <x>905</x>
+     <y>406</y>
     </hint>
    </hints>
   </connection>
@@ -3484,12 +3513,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>404</x>
-     <y>286</y>
+     <x>427</x>
+     <y>317</y>
     </hint>
     <hint type="destinationlabel">
-     <x>855</x>
-     <y>291</y>
+     <x>905</x>
+     <y>318</y>
     </hint>
    </hints>
   </connection>
@@ -3500,12 +3529,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>389</x>
-     <y>286</y>
+     <x>412</x>
+     <y>317</y>
     </hint>
     <hint type="destinationlabel">
-     <x>928</x>
-     <y>291</y>
+     <x>970</x>
+     <y>318</y>
     </hint>
    </hints>
   </connection>
@@ -3520,8 +3549,8 @@
      <y>204</y>
     </hint>
     <hint type="destinationlabel">
-     <x>403</x>
-     <y>528</y>
+     <x>476</x>
+     <y>556</y>
     </hint>
    </hints>
   </connection>
@@ -3536,8 +3565,8 @@
      <y>233</y>
     </hint>
     <hint type="destinationlabel">
-     <x>403</x>
-     <y>558</y>
+     <x>476</x>
+     <y>586</y>
     </hint>
    </hints>
   </connection>
@@ -3552,8 +3581,8 @@
      <y>349</y>
     </hint>
     <hint type="destinationlabel">
-     <x>403</x>
-     <y>580</y>
+     <x>476</x>
+     <y>616</y>
     </hint>
    </hints>
   </connection>
@@ -3568,8 +3597,8 @@
      <y>349</y>
     </hint>
     <hint type="destinationlabel">
-     <x>473</x>
-     <y>588</y>
+     <x>536</x>
+     <y>606</y>
     </hint>
    </hints>
   </connection>
@@ -3584,8 +3613,8 @@
      <y>291</y>
     </hint>
     <hint type="destinationlabel">
-     <x>403</x>
-     <y>610</y>
+     <x>476</x>
+     <y>646</y>
     </hint>
    </hints>
   </connection>
@@ -3596,12 +3625,12 @@
    <slot>setText(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>505</x>
-     <y>407</y>
+     <x>575</x>
+     <y>437</y>
     </hint>
     <hint type="destinationlabel">
-     <x>403</x>
-     <y>640</y>
+     <x>476</x>
+     <y>676</y>
     </hint>
    </hints>
   </connection>
@@ -3612,12 +3641,12 @@
    <slot>setText(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>595</x>
-     <y>407</y>
+     <x>665</x>
+     <y>437</y>
     </hint>
     <hint type="destinationlabel">
-     <x>473</x>
-     <y>648</y>
+     <x>536</x>
+     <y>666</y>
     </hint>
    </hints>
   </connection>
@@ -3632,8 +3661,8 @@
      <y>503</y>
     </hint>
     <hint type="destinationlabel">
-     <x>428</x>
-     <y>513</y>
+     <x>441</x>
+     <y>634</y>
     </hint>
    </hints>
   </connection>
