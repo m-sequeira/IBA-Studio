@@ -848,14 +848,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.profile_table_fit_result.setHorizontalHeaderLabels(labels)
 
 		# set defaults
-		self.pileup_param.setText('1e-6')
-		self.doublescatter_scaleparam.setText('1')
-		self.straggling_scaleparam.setText('1')
-		# self.profile_min_thickness.setText('0')
-
-		self.checkCalibration.setChecked(True)
-		self.checkCharge.setChecked(True)
-
 		if self.debug: print('NDF_gui, reset_window - set all to 0')
 		self.comboTechnique.blockSignals(True)
 		self.nspectra = 0
@@ -872,6 +864,14 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboTechnique.blockSignals(True)
 		self.comboTechnique.setCurrentIndex(0)
 		self.comboTechnique.blockSignals(False)
+
+		self.pileup_param.setText('1e-6')
+		self.doublescatter_scaleparam.setText('1')
+		self.straggling_scaleparam.setText('1')
+		# self.profile_min_thickness.setText('0')
+		self.checkCalibration.setChecked(True)
+		self.checkCharge.setChecked(True)
+		self.checkWindow.setChecked(False)
 
 		if self.debug: print('NDF_gui, reset_window - reset figs')
 
@@ -1013,11 +1013,11 @@ class Window(QMainWindow, Ui_MainWindow):
 				'method': self.idf_file.get_scattering_angle_fitparam},
 			'charge':{
 				'check': self.checkCharge,
-				'field': None, #self.geo_solid_angle_fit,
+				'field': None, 
 				'method': self.idf_file.get_charge_fitparam},
 			'calibration':{
 				'check': self.checkCalibration,
-				'field': None, #[self.geo_calibration_m_fit, self.geo_calibration_b_fit],
+				'field': None, 
 				'method': self.idf_file.get_energy_calibration_fitparam},
 		}
 
@@ -1516,7 +1516,7 @@ class Window(QMainWindow, Ui_MainWindow):
 				self.set_spectrum_box()
 				self.update_comboSpectrum_id()
 
-				self.spectra_id = spectra_id
+				# self.spectra_id = spectra_id
 
 			except Exception as e:
 				msg = QMessageBox()
@@ -1903,7 +1903,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		
 		
 		geometry = self.geo_geometry.currentText()
-		self.idf_file.set_geometry_type(geometry, spectra_id=self.spectra_id)
+		self.idf_file.set_geometry_type(geometry, spectra_id=spectra_id)
 		
 		
 		# incident_angle = self.geo_angle_in.text()
@@ -1916,10 +1916,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		m_calib = self.geo_calibration_m.text()
 		b_calib = self.geo_calibration_b.text()
-		self.idf_file.set_energy_calibration(m_calib, b_calib, spectra_id=self.spectra_id)
+		self.idf_file.set_energy_calibration(m_calib, b_calib, spectra_id=spectra_id)
 
 		technique = self.comboTechnique.currentText()
-		self.idf_file.set_technique(technique, spectra_id=self.spectra_id)
+		self.idf_file.set_technique(technique, spectra_id=spectra_id)
 
 		if technique == 'PIXE':
 			reaction = {
@@ -1930,7 +1930,7 @@ class Window(QMainWindow, Ui_MainWindow):
 				'reactionQ': '',
 				'code':''
 				}
-			self.idf_file.set_reactions(reaction, spectra_id=self.spectra_id)
+			self.idf_file.set_reactions(reaction, spectra_id=spectra_id)
 
 
 
@@ -2137,9 +2137,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		for k, p in pairs.items():
 			if k == 'calibration':
-				p['method'](p['check'].isChecked(), p['check'].isChecked())
+				p['method'](p['check'].isChecked(), p['check'].isChecked(), spectra_id = self.spectra_id, simulation_id = self.simulation_id)
 			elif k == 'charge':
-				p['method'](p['check'].isChecked())
+				p['method'](p['check'].isChecked(), spectra_id = self.spectra_id, simulation_id = self.simulation_id)
 
 			elif p['check'].isChecked():
 				if isinstance(p['field'], list):
