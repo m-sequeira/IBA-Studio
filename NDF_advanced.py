@@ -30,8 +30,6 @@ class NDF_advanced():
 		except:
 			pass
 
-		self.path_advanced = '/home/user/IDF_python/IBAStudio/tests/test_7_advanced'
-
 		# self.figure_result_advanced = plt.figure(figsize=(4,4))
 		# self.canvas_result_advanced = FigureCanvas(self.figure_result_advanced)
 		# self.window.spectra_result_plot_advanced.addWidget(self.canvas_result_advanced)
@@ -335,6 +333,8 @@ class NDF_advanced():
 
 	def run_ndf(self):
 		self.ndf_window.advanced_tab = self
+		self.save_advanced()
+
 
 		if ~self.ndf_window.isVisible():
 			self.ndf_window.show()
@@ -349,8 +349,6 @@ class run_ndf_from_ori_files(NDF_Window):
 	def tcn_warning(self):
 		file = self.advanced_tab.path_advanced + '/ndf.tcn'
 		current_option = str(self.comboRun_speed.currentText())
-
-		breakpoint()
 
 		if 'TCN' in current_option:
 			if isfile(file) is False:
@@ -380,7 +378,6 @@ class run_ndf_from_ori_files(NDF_Window):
 
 	def run_ndf(self):
 		#save advanced tab state
-		self.advanced_tab.save_advanced()
 		options_combo = {
 					'fitmethod': self.comboRun_speed,
 					'channelcompreesion': self.comboRun_compression,

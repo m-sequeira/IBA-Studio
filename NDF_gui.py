@@ -8,6 +8,7 @@ from webbrowser import open_new
 from shutil import copyfile
 from copy import deepcopy
 from pickle import load as pickleLoad
+from Settings import settings
 
 
 from PyQt5.QtWidgets import (
@@ -34,7 +35,6 @@ syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
 from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol, pretty_formula_ratio
 from NDF_project import project, load as load_project
-from Settings import settings
 from NDF_advanced import NDF_advanced
 
 from numpy import loadtxt, savetxt, array as nparray
@@ -48,8 +48,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.setupUi(self)
 		self.spacerItem = QSpacerItem(20, 30)
 		self.spacerItem_result = QSpacerItem(20, 40)
-		self.add_menu_to_button(self.copyGeometry_button)
-		# self.menu_elements = self.add_menu_to_button(self.copyElements_button)
 
 
 		self.connectSignalsSlots()
@@ -93,6 +91,16 @@ class Window(QMainWindow, Ui_MainWindow):
 				menu_items.remove(current_spectrum)
 			except:
 				pass
+		elif button.objectName() == 'copyNDFparam_button':
+			menu.triggered.connect(lambda x: self.copy_model_spectra(x.text().split(':')[0] ))
+			menu_items = ['All']
+			menu_items += self.idf_file.get_all_spectra_filenames()
+
+			current_spectrum = self.comboSpectrum_id.currentText()
+			try:
+				menu_items.remove(current_spectrum)
+			except:
+				pass
 
 
 			
@@ -120,6 +128,17 @@ class Window(QMainWindow, Ui_MainWindow):
 		else:
 			target_spectra_id = int(target_spectra_id)
 			self.save_geometry_box(target_spectra_id = target_spectra_id)
+
+	def copy_model_spectra(self, target_spectra_id):
+		if target_spectra_id == 'All':
+			target_spectra_id = range(self.nspectra)
+			for spectra_id in target_spectra_id:
+				self.save_fit_methods_box(target_spectra_id = spectra_id)
+				self.save_geometry_box_fits(target_spectra_id = spectra_id)
+		else:
+			target_spectra_id = int(target_spectra_id)
+			self.save_fit_methods_box(target_spectra_id = target_spectra_id)
+			self.save_geometry_box_fits(target_spectra_id = target_spectra_id)
 
 
 	def copy_elements_output2input(self, element):
@@ -302,7 +321,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.deleteSpectrumButton.clicked.connect(self.delete_spectrum)
 		self.run_NDF_button.clicked.connect(self.run_ndf)
 		self.pushLoad_results.clicked.connect(self.load_results)
-		self.pushLoad_results_advanced.clicked.connect(self.load_results)
+		# self.pushLoad_results_advanced.clicked.connect(self.load_results)
 		self.copyProfile_button.clicked.connect(self.copy_profile_output2input)
 
 		# run history
@@ -450,6 +469,9 @@ class Window(QMainWindow, Ui_MainWindow):
 			# self.reload_models_box()
 			self.reload_technique()
 			self.add_menu_to_button(self.copySpectra_button)
+			self.add_menu_to_button(self.copyNDFparam_button)
+
+
 		except Exception as e:
 			if self.debug: raise e
 
@@ -805,6 +827,8 @@ class Window(QMainWindow, Ui_MainWindow):
 				pass
 
 			self.add_menu_to_button(self.copySpectra_button)
+			self.add_menu_to_button(self.copyNDFparam_button)
+			self.add_menu_to_button(self.copyGeometry_button)
 
 
 		if self.debug: print('NDF_gui, reload_window - reloading ends')
@@ -923,12 +947,34 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.profile_table_fit_result.setHorizontalHeaderLabels(labels)
 
 
+	def convert_window_energy(self, value, channel2energy = True):
+		value = int(float(value))
+
+		if self.settings['Appearance'].getboolean('energy_scale_keV'):
+			# m, b = 1, 0
+			calib = self.idf_file.get_energy_calibration(spectra_id = self.spectra_id) 
+			if None not in calib:
+				m, b = calib[0], calib[1]
+
+				if channel2energy == False:
+					value = (value - b)/m
+				else:
+					value = m*value + b
+
+				value = '%0.1f'%value
+
+		return value
+
+
 	def set_geometry_box(self):
 		try:
 			params = self.idf_file.get_geo_parameters(spectra_id=self.spectra_id) 
 		except Exception as e:
 			if self.debug: raise e
 			return
+
+		params['window'][0] = self.convert_window_energy(params['window'][0])
+		params['window'][1] = self.convert_window_energy(params['window'][1])
 
 		pairs_params = {
 			'beam_energy' : self.geo_energy,
@@ -941,7 +987,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		}       
 
 		for key,element in pairs_params.items():
-			# print(key, params[key])
 			if isinstance(element, list):
 				if params[key][0]:
 					element[0].setText(str(params[key][0]))
@@ -1025,11 +1070,16 @@ class Window(QMainWindow, Ui_MainWindow):
 		for k, p in pairs.items():
 			value = p['method'](spectra_id = self.spectra_id, simulation_id=self.simulation_id)
 
+			if 'window' in k:
+				value = self.convert_window_energy(value)
+
+
 			if k == 'calibration':
 				if value == ['True', 'True']:
 					p['check'].setChecked(True)
 				else:
 					p['check'].setChecked(False)
+
 			elif k == 'charge':
 				if value == 'True': p['check'].setChecked(True)
 				else: p['check'].setChecked(False)
@@ -1059,7 +1109,7 @@ class Window(QMainWindow, Ui_MainWindow):
 				p['check'].setChecked(True)
 				p['field'].setEnabled(True)
 				if not isinstance(value, str): value = str(value)
-				p['field'].setText(value)
+				p['field'].setText(value) 
 
 
 	def set_models_box(self):
@@ -1257,9 +1307,17 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.ax_result.legend(frameon = False, ncol= 2, loc='center left', bbox_to_anchor=(1, 0.5))
 
 		else:
-			cut_channel = 50
-			self.ax_result.plot(data_x_given[cut_channel:], data_y_given[cut_channel:], 'o', ms = 2, label = 'Exp.')
-			self.ax_result.plot(data_x_fit[cut_channel:], data_y_fit[cut_channel:], label = 'Fit')
+			cut_channel = int(self.settings['Appearance']['cut_off_channel'])
+			
+			m = 1
+			b = 0
+			if self.settings['Appearance'].getboolean('energy_scale_keV'):
+				calib = self.idf_file.get_energy_calibration_fit_result(spectra_id = self.spectra_id, simulation_id = self.simulation_id) 
+				if calib is not None:
+					m, b = calib[0], calib[1]
+			
+			self.ax_result.plot(m*nparray(data_x_given[cut_channel:]) + b, data_y_given[cut_channel:], 'o', ms = 2, label = 'Exp.')
+			self.ax_result.plot(m*nparray(data_x_fit[cut_channel:]) + b, data_y_fit[cut_channel:], label = 'Fit')
 			
 			if self.settings['Appearance'].getboolean('show_elemental_fits'):
 				data_ele = self.idf_file.get_elemental_dataxy_fit(spectra_id = self.spectra_id, simulation_id = self.simulation_id)
@@ -1267,11 +1325,13 @@ class Window(QMainWindow, Ui_MainWindow):
 				for name, y in data_ele.items():
 					if name == 'x':
 						continue
-					self.ax_result.plot(data_ele['x'][cut_channel:], y[cut_channel:], '--', label = name)
+					self.ax_result.plot(m*nparray(data_ele['x'][cut_channel:]) + b, y[cut_channel:], '--', label = name)
 				
 
-
-			self.ax_result.set_xlabel('Energy (Channels)')
+			if self.settings['Appearance'].getboolean('energy_scale_keV'):
+				self.ax_result.set_xlabel('Energy (keV)')
+			else:
+				self.ax_result.set_xlabel('Energy (Channels)')
 			self.ax_result.legend(frameon=False)
 
 
@@ -1717,8 +1777,20 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.ax.legend(frameon = False, loc='center left', bbox_to_anchor=(1, 0.5))
 
 		else:
-			self.ax.plot(data_x[3:], data_y[3:])
-			self.ax.set_xlabel('Energy (Channels)')
+			cut_channel = int(self.settings['Appearance']['cut_off_channel'])
+
+			m = 1
+			b = 0
+			if self.settings['Appearance'].getboolean('energy_scale_keV'):
+				calib = self.idf_file.get_energy_calibration_fit_result(spectra_id = self.spectra_id, simulation_id = self.simulation_id) 
+				if calib is not None:
+					m, b = calib[0], calib[1]
+
+			self.ax.plot(m*data_x[cut_channel:] + b, data_y[cut_channel:])
+			if self.settings['Appearance'].getboolean('energy_scale_keV'):
+				self.ax.set_xlabel('Energy (keV)')
+			else:
+				self.ax.set_xlabel('Energy (Channels)')
 
 		self.ax.set_yticklabels([])
 		self.figure_exp_spectra.tight_layout()
@@ -1744,7 +1816,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.set_element_color(self.elements_table, "QTableWidget")
 			return
 
-		print('NDF_gui, set_elements_box elements', elements)
 		i= 0
 		fitted = False
 		for key, param in elements.items():
@@ -1753,7 +1824,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 			if '?=' in param['name']:
 				param['name'] = param['name'].replace('?=','')
-				print('NDF_gui, set_elements_box clean name:', param['name'])
 				fitted = True
 
 			item = QTableWidgetItem(param['name'])
@@ -1770,7 +1840,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.elements_table.setItem(i,5,item)
 	
 			if fitted:
-				print('NDF_gui, set_elements_box, fitted', fitted)
 				self.fitElementLayout.itemAt(i).widget().setChecked(True)
 				fitted = False
 
@@ -1806,7 +1875,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		except:
 			return
 
-		print('NDF_gui, set_profile_box, ', elements)
 
 		ele_ids = [0]*elements['nelements']
 		for key, params in elements.items():
@@ -2099,7 +2167,7 @@ class Window(QMainWindow, Ui_MainWindow):
 	   #      ]
 
 
-	def save_geometry_box_fits(self):
+	def save_geometry_box_fits(self, target_spectra_id = ''):
 		pairs = {
 			'energy':{
 				'check': self.checkEnergy,
@@ -2135,26 +2203,35 @@ class Window(QMainWindow, Ui_MainWindow):
 				'method': self.idf_file.set_energy_calibration_fitparam},
 		}
 
+		if target_spectra_id == '':
+			spectra_id = self.spectra_id
+		else:
+			spectra_id = target_spectra_id
+
 		for k, p in pairs.items():
 			if k == 'calibration':
-				p['method'](p['check'].isChecked(), p['check'].isChecked(), spectra_id = self.spectra_id, simulation_id = self.simulation_id)
+				p['method'](p['check'].isChecked(), p['check'].isChecked(), spectra_id = spectra_id, simulation_id = self.simulation_id)
 			elif k == 'charge':
-				p['method'](p['check'].isChecked(), spectra_id = self.spectra_id, simulation_id = self.simulation_id)
+				p['method'](p['check'].isChecked(), spectra_id = spectra_id, simulation_id = self.simulation_id)
 
 			elif p['check'].isChecked():
 				if isinstance(p['field'], list):
-					p['method'](p['field'][0].text(), p['field'][1].text(), spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					p['method'](p['field'][0].text(), p['field'][1].text(), spectra_id = spectra_id, simulation_id = self.simulation_id)
 				else:
-					p['method'](p['field'].text(),  spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					value = p['field'].text()
+					if 'window' in k:
+						value = self.convert_window_energy(value, channel2energy = False)
+
+					p['method'](value,  spectra_id=spectra_id, simulation_id = self.simulation_id)
 			else:
 				if isinstance(p['field'], list):
-					p['method']('','',  spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					p['method']('','',  spectra_id=spectra_id, simulation_id = self.simulation_id)
 				else:
-					p['method']('',  spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					p['method']('',  spectra_id=spectra_id, simulation_id = self.simulation_id)
 
 
 
-	def save_fit_methods_box(self):
+	def save_fit_methods_box(self, target_spectra_id = ''):
 		pairs = {
 			'pileup':{
 				'check': self.checkPileup,
@@ -2188,6 +2265,11 @@ class Window(QMainWindow, Ui_MainWindow):
 			},
 		}
 
+		if target_spectra_id == '':
+			spectra_id = self.spectra_id
+		else:
+			spectra_id = target_spectra_id
+
 		for k, p in pairs.items():
 			if p['check'].isChecked():
 				if isinstance(p['model'], QComboBox):
@@ -2197,15 +2279,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
 				if p['param'] is not None: 
 					param = p['param'].text()
-					p['method'](model, param,  spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					p['method'](model, param,  spectra_id=spectra_id, simulation_id = self.simulation_id)
 				else: 
-					p['method'](model,  spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					p['method'](model,  spectra_id=spectra_id, simulation_id = self.simulation_id)
 
 			else:
 				if p['param'] is not None:
-					p['method']('','',  spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					p['method']('','',  spectra_id=spectra_id, simulation_id = self.simulation_id)
 				else:
-					p['method']('',  spectra_id=self.spectra_id, simulation_id = self.simulation_id)
+					p['method']('',  spectra_id=spectra_id, simulation_id = self.simulation_id)
 
 
 
@@ -2228,7 +2310,9 @@ class IDF_spectrum_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 
 		self.idf_file = main_window.idf_file
 		self.spectra_id = main_window.spectra_id
+		self.simulation_id = main_window.simulation_id
 		self.comboTechnique = main_window.comboTechnique
+		self.settings = main_window.settings
 
 		self.figure_exp_spectra = plt.figure(figsize=(8, 6))
 		self.canvas_exp_spectra = FigureCanvas(self.figure_exp_spectra)
@@ -2413,6 +2497,9 @@ class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
 
 if __name__ == "__main__":
 	app = QApplication(argv)
+
+	from PyQt5.QtCore import pyqtRemoveInputHook
+	pyqtRemoveInputHook()
 
 	win = Window()
 
