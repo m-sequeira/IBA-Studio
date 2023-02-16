@@ -276,10 +276,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		print(cmd)
 		with open(path_bat,'w') as file:
-			file.write('echo \'Run started...\' > run_status.res \n')
 			file.write('cd ' + path + '\n')
+			file.write('echo \'Run started...\' > run_status.res \n')
 			file.write(cmd + '\n')
-			file.write('echo \'Finished\' > ../run_status.res \n')
+			file.write('echo \'Finished\' > run_status.res \n')
 			file.write('echo \'\n\nPress enter to close:\'\n')
 			if self.main_window.settings['Actions'].getboolean('keep_NDF_open'):
 				file.write('read line')

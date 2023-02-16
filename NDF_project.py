@@ -16,10 +16,17 @@ class project():
 
 		self.debug = False
 
-	def reload_idf_file(self, index):
-		path = self.sim_version_history[index].file_path
-		self.sim_version_history[index] = IDF(path)
-		return self.sim_version_history[index]
+	def reload_idf_file(self, index = None):
+		if index is None:
+			for i,version in enumerate(self.sim_version_history):
+				path = version.file_path
+				self.sim_version_history[i] = IDF(path)
+
+			return None
+		else:
+			path = self.sim_version_history[index].file_path
+			self.sim_version_history[index] = IDF(path)
+			return self.sim_version_history[index]
 
 
 	def get_version_names(self):
@@ -31,11 +38,17 @@ class project():
 			name = name.replace('_', ' ')
 			# if name == '':
 			# 	name = 'Initial'
+			with open(idf.path_dir + 'run_status.res') as file:
+				status = file.readline()
+				if 'Run' in status:
+					name = '[R] ' + name
+				
+
 			prev_names.append(name)
 
 		prev_names.append('In xml file')
 
-		if self.debug: print('NDF_project, get_version_names, name:', prev_names)
+
 
 		return prev_names
 

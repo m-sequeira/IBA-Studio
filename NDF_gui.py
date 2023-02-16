@@ -475,9 +475,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		except Exception as e:
 			if self.debug: raise e
 
-		# breakpoint()
-		# print('Ln 269', self.spectra_id, newvalue, self.comboSpectrum_id.currentIndex())
-
 
 	@property
 	def simulation_id(self):
@@ -1202,17 +1199,20 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.fitElementLayout.itemAt(i).widget().setChecked(fit_checked[i])
 
 
-	def load_results(self):
+	def load_results(self, index_run = None):
 		if self.debug: print('NDF_gui, load_results - begins')
 		self.update_runList()		
 
 		try:
 			# need to reload the file from the disk because IDF2NDF (of NDF) changes 
 			# the file (adds the file ids used for output)
-			self.idf_file  = self.project.reload_idf_file(-1)
+			if index_run is None:
+				index_run = 0
+
+			self.idf_file  = self.project.reload_idf_file(-(index_run + 1))
 
 			self.runList.blockSignals(True)
-			self.runList.setCurrentRow(0)
+			self.runList.setCurrentRow(index_run)
 			self.runList.blockSignals(False)
 
 			for i in range(self.nspectra):
@@ -1254,14 +1254,17 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.idf_file = IDF(self.path)
 		else:
 			if self.debug: print('NDF_gui, change_idf_version - deep copy made of i:', index_run)
-			self.idf_file = deepcopy(self.project.sim_version_history[-(index_run + 1)])
+			if '[R]' in text_run:
+				self.load_results(index_run = index_run)
+			else:
+				self.idf_file = deepcopy(self.project.sim_version_history[-(index_run + 1)])
 		
 		if self.debug: print('NDF_gui, change_idf_version - ',  self.idf_file.path_dir)
 
 		spectra_id_old = self.spectra_id
 		if self.debug: print('NDF_gui, change_idf_version - reload window')
 		self.reload_window()
-		if self.debug: print('NDF_gui, change_idf_version - change spetrac_id')
+		if self.debug: print('NDF_gui, change_idf_version - change spectra_id')
 		self.spectra_id = spectra_id_old
 
 		if self.ndf_window.isVisible():
