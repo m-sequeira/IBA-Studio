@@ -1,4 +1,4 @@
-from sys import argv, exit, path as syspath
+from sys import argv, exit, path as syspath, setrecursionlimit
 from os import remove
 from shutil import rmtree
 from os.path import dirname, realpath, join as osjoin
@@ -30,6 +30,7 @@ from about_window_ui import Ui_dialog_about
 from ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
 from reactions_ui import Ui_Dialog as Ui_Reactions_Dialog
 from ndf_run_window import Window as NDF_Window
+from ndf_more_options import Window as ndf_more_options_window
 
 syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
@@ -37,10 +38,13 @@ from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_
 from NDF_project import project, load as load_project
 from NDF_advanced import NDF_advanced
 
-from numpy import loadtxt, savetxt, array as nparray
+from numpy import loadtxt, savetxt, array as nparray, zeros_like as npzeros_like
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 
+
+# this might lead to system instabilities. A better copy algorithm needs to be implented to handle the deepcopy of large idf files
+setrecursionlimit(10000)
 
 class Window(QMainWindow, Ui_MainWindow):
 	def __init__(self, parent=None):
@@ -85,6 +89,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			menu.triggered.connect(lambda x: self.copy_geo_spectra(x.text().split(':')[0] ))
 			menu_items = ['All']
 			menu_items += self.idf_file.get_all_spectra_filenames()
+			menu_items = [name.split('.')[0] for name in menu_items]
 
 			current_spectrum = self.comboSpectrum_id.currentText()
 			try:
@@ -95,6 +100,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			menu.triggered.connect(lambda x: self.copy_model_spectra(x.text().split(':')[0] ))
 			menu_items = ['All']
 			menu_items += self.idf_file.get_all_spectra_filenames()
+			menu_items = [name.split('.')[0] for name in menu_items]
 
 			current_spectrum = self.comboSpectrum_id.currentText()
 			try:
@@ -131,14 +137,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def copy_model_spectra(self, target_spectra_id):
 		if target_spectra_id == 'All':
-			target_spectra_id = range(self.nspectra)
-			for spectra_id in target_spectra_id:
-				self.save_fit_methods_box(target_spectra_id = spectra_id)
-				self.save_geometry_box_fits(target_spectra_id = spectra_id)
+			for spectra_id in range(self.nspectra):
+				for simulation_id in range(len(self.idf_file.get_reactions(spectra_id = spectra_id))):
+					self.save_fit_methods_box(target_spectra_id = spectra_id, target_simulation_id = simulation_id)
+					self.save_geometry_box_fits(target_spectra_id = spectra_id, target_simulation_id = simulation_id)
 		else:
 			target_spectra_id = int(target_spectra_id)
-			self.save_fit_methods_box(target_spectra_id = target_spectra_id)
-			self.save_geometry_box_fits(target_spectra_id = target_spectra_id)
+			for simulation_id in range(len(self.idf_file.get_reactions(spectra_id = target_spectra_id))):
+				self.save_fit_methods_box(target_spectra_id = target_spectra_id, target_simulation_id = simulation_id)
+				self.save_geometry_box_fits(target_spectra_id = target_spectra_id, target_simulation_id = simulation_id)
 
 
 	def copy_elements_output2input(self, element):
@@ -154,10 +161,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			# if '?=' in initial_value:
 			# 	final_value = set_element_fit_symbol(final_value)
 			self.elements_table.item(id_element, 0).setText(final_value)
-
-		
-
-
 
 	def copy_geooutput2input(self, element):
 		pairs = {
@@ -203,7 +206,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			else:
 				fields_out.setText(fields_in.text())
 
-
 	def copy_profile_output2input(self):
 		nrows = self.profile_table_fit_result.rowCount()
 		ncols = self.profile_table_fit_result.columnCount()
@@ -223,9 +225,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.nsims = 0
 		self._simulation_id = 0
 
-		
-
-
 		# resize the element table columns with
 		horizontalHeader = self.elements_table.horizontalHeader()
 		# resize the first column to 100 pixels
@@ -238,6 +237,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.error_window = self.message_window()
 
 		self.about_window = About_Window()
+		self.ndf_more_options_window = ndf_more_options_window(self)
 		self.new_windows = []
 
 		self.figure_exp_spectra = plt.figure(figsize=(5,2))
@@ -245,7 +245,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.spectra_plot.addWidget(self.canvas_exp_spectra)
 		self.canvas_exp_spectra.mpl_connect('button_press_event', self.onclick_spectrum)
 		self.canvas_exp_spectra.setToolTip('Click to enlarge')
-
 
 		self.figure_result = plt.figure(figsize=(8.5,2.5))
 		self.canvas_result = FigureCanvas(self.figure_result)
@@ -265,8 +264,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.canvas_result_advanced = FigureCanvas(self.figure_result_advanced)
 		self.spectra_result_plot_advanced.addWidget(self.canvas_result_advanced)
 		# self.canvas_result_advanced.mpl_connect('button_press_event', self.onclick_spectra_fit_result_advanced)
-		# self.canvas_result_advanced.setToolTip('Click to enlarge')
-		
+		# self.canvas_result_advanced.setToolTip('Click to enlarge')		
 
 		self.new()
 
@@ -281,12 +279,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.ndf_window = NDF_Window(self)
 		self.path = None
 		self.path_dir = None
+		self.file = None
+
 		self.setWindowTitle('IDF Viewer: New file')
 		self.reset_window()
 		self.update_runList()
-		
-
-
 		
 
 
@@ -306,6 +303,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		# tools menu
 		self.actionClear_Files.triggered.connect(self.clear_files)
 		self.actionRemove_results_from_IDF.triggered.connect(self.remove_results_from_IDF)
+		self.actionClear_idv_file.triggered.connect(self.clear_idv_file)
 		self.actionExport_fit.triggered.connect(self.export_fit)
 
 		# about menu
@@ -313,7 +311,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.actionOpen_NDF_Manual.triggered.connect(About_Window.open_NDF_manual)
 
 		# window top banner
-		self.actionReload_file.triggered.connect(self.reload_window)
+		self.actionReload_file.triggered.connect(self.reload_button)
 
 		# window buttons
 		self.loadSpectrumButton.clicked.connect(self.load_spectrum)
@@ -323,6 +321,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.pushLoad_results.clicked.connect(self.load_results)
 		# self.pushLoad_results_advanced.clicked.connect(self.load_results)
 		self.copyProfile_button.clicked.connect(self.copy_profile_output2input)
+		self.calibration_button.clicked.connect(self.onclick_calibration_button)
+		self.ndfMoreButton.clicked.connect(self.onclick_ndfMoreButton)
 
 		# run history
 		self.runList.currentRowChanged.connect(self.change_idf_version)
@@ -337,7 +337,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		
 		self.comboSpectrum_id.currentIndexChanged.connect(self.onchange_spectrum_combo)
 		self.comboTechnique.currentIndexChanged.connect(self.reload_technique)
-		#self.comboReactions.currentIndexChanged.connect(self.onchange_reaction)
+		# self.comboReactions.currentIndexChanged.connect(self.onchange_reaction)
 		self.comboReactions.activated.connect(self.onchange_reaction)
 		self.comboSimulation.currentIndexChanged.connect(self.onchange_comboSimulation)
 		self.geo_projectile_in.textChanged.connect(self.reload_geoprojout)
@@ -352,6 +352,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.comboSpectrum_id.view().pressed.connect(self.save_state)
 		self.comboSpectrum_id_results.view().pressed.connect(self.save_state)
 		self.comboSimulation.view().pressed.connect(self.save_state)
+		self.comboTechnique.view().pressed.connect(self.save_state)
+		self.comboReactions.view().pressed.connect(self.save_state)
 		# self.tabWidget.currentChanged.connect(self.save_state)
 
 
@@ -359,29 +361,45 @@ class Window(QMainWindow, Ui_MainWindow):
 	def onclick_profile(self,event):
 		self.new_windows.append(NDF_Fit_Figure(self, type = 'profile'))
 		self.new_windows[-1].show()
-		self.new_windows[-1].setWindowTitle('Profile:', self.runList.currentItem().text())
+
+		if self.runList.currentItem() is not None:
+			self.new_windows[-1].setWindowTitle('Profile:', self.runList.currentItem().text())
 
 
 	def onclick_spectra_fit_result(self,event):
 		self.new_windows.append(NDF_Fit_Figure(self))
 		self.new_windows[-1].show()
-		self.new_windows[-1].setWindowTitle('Fit: %s' %self.runList.currentItem().text())
-
+		if self.runList.currentItem() is not None:
+			self.new_windows[-1].setWindowTitle('Fit: %s' %self.runList.currentItem().text())
 
 	def onclick_spectrum(self,event):
 		self.new_windows.append(IDF_spectrum_Figure(self))
 		self.new_windows[-1].show()
-		self.new_windows[-1].setWindowTitle('Spectrum %s' %str(self.comboSpectrum_id.currentText()))
+		if self.comboSpectrum_id.currentItem() is not None:
+			self.new_windows[-1].setWindowTitle('Spectrum %s' %str(self.comboSpectrum_id.currentText()))
 
 	def onclick_elements_table(self, event):
 		self.set_sample_fit_box()
 
 
-	def save_state(self):
-		# if self.comboTechnique.currentText() != 'SIMS':
-		# tab_index = self.tabWidget.currentIndex()
+	def onclick_calibration_button(self):
+		options = QFileDialog.Options()
+		filePath, _ = QFileDialog.getOpenFileName(self, "Add calibration file", "", "All files (*)", options=options)
 
-		# if tab_index == 0:
+		if filePath != '':
+			fileName = filePath.split('/')[-1]
+			try:
+				copyfile(filePath, self.idf_file.path_dir + fileName)
+			except:
+				pass
+
+			self.geo_calibration_m.setText(fileName)
+			self.idf_file.set_energy_calibration_file(filePath, spectra_id=self.spectra_id)
+
+
+
+
+	def save_state(self):
 		try:
 			self.save_elements_box()
 			self.save_profile_box()		
@@ -395,7 +413,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			if self.debug: raise e
 			print('State not saved')
 
-		if self.debug: print('NDF_gui, save_state - ', self.idf_file.get_geo_parameters()['beam_energy'], self.geo_energy.text())
 
 	def onchange_spectrum_combo(self):
 		curr_index = self.comboSpectrum_id.currentIndex()
@@ -404,13 +421,23 @@ class Window(QMainWindow, Ui_MainWindow):
 		if self.spectra_id != curr_index:
 			self.spectra_id = curr_index
 
-
-
 	def onchange_reaction(self):
 		if self.comboReactions.currentText() == 'Edit reactions...':
 			self.edit_reactions_window()
 
+		reaction_id = self.comboReactions.currentIndex()
 
+		if reaction_id < self.comboReactions.count() - 2:
+			try:
+				m, b = self.idf_file.get_energy_calibration(spectra_id = self.spectra_id, reaction_id = reaction_id)
+
+				if m is None: m = ''
+				if b is None: b = ''
+
+				self.geo_calibration_m.setText(str(m))
+				self.geo_calibration_b.setText(str(b))
+			except:
+				pass
 
 	def onchange_spectrum_combo_results(self):
 		curr_index = self.comboSpectrum_id_results.currentIndex()
@@ -423,6 +450,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def onchange_comboSimulation(self):
 		self.simulation_id = self.comboSimulation.currentIndex()
+
+	def onclick_ndfMoreButton(self):
+		self.ndf_more_options_window.show()
+		self.ndf_more_options_window.activateWindow()
+
+		self.new_windows.append(self.ndf_more_options_window)
+
+		frame = self.frameGeometry()
+		self.ndf_more_options_window.move(frame.x(), frame.y() + frame.height() + 15)
 
 
 	@property
@@ -530,7 +566,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			if self.nsims == 0: self.nsims = 1
 			name_list = ['Simulation %i' %i for i in range(1, 1 + self.nsims)]
 		else:
-			if technique in ['RBS', 'NRA']:
+			if technique in ['RBS', 'NRA', 'ERDA']:
 				name_list = [technique + ': ' + r['code'] for r in reactions]
 			else:
 				name_list = [technique + ': Simulation %i' %i for i in range(1, 1 + self.nsims)]
@@ -569,30 +605,64 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.runList.clear()
 		self.runList.addItems(prev_names)
 		self.runList.blockSignals(False)
+
+		run_states = self.project.check_simulations_running()
+		if True not in run_states:
+			self.pushLoad_results.setEnabled(False)
+		else:
+			self.pushLoad_results.setEnabled(True)
 		
 
 	
 	def edit_reactions_window(self):
-		input_reaction = Reactions_Dialog(self.idf_file.get_reactions(spectra_id=self.spectra_id))
+		reactions = self.idf_file.get_reactions(spectra_id=self.spectra_id)
+		if reactions is None:
+			reactions = [
+				{'initialtargetparticle':'',
+				  'incidentparticle': self.geo_projectile_in.text(),
+				  'exitparticle': '',
+				  'finaltargetparticle': '',
+				  'reactionQ': '',
+				  'code': ''},]
+	
+		for i,r in enumerate(reactions):
+			r['calibration'] = self.idf_file.get_energy_calibration(spectra_id = self.spectra_id, reaction_id = i)
+
+		input_reaction = Reactions_Dialog(reactions, technique = self.comboTechnique.currentText())
 		reactions = input_reaction.get_values()
 		if reactions is None:
 			return
-				
+
 		self.idf_file.set_reactions(reactions[0], append = False, spectra_id = self.spectra_id)
-		for r in reactions[1:]:
+		m, b = reactions[0]['calibration']
+		self.idf_file.set_energy_calibration(m, b, append = False, spectra_id = self.spectra_id, reaction_id = 0)
+		for i, r in enumerate(reactions[1:]):
 			self.idf_file.set_reactions(r, spectra_id = self.spectra_id)
+			m, b = r['calibration']
+			self.idf_file.set_energy_calibration(m, b, append = False, spectra_id = self.spectra_id, reaction_id = i + 1)
+			
 
 		self.idf_file.set_technique(self.comboTechnique.currentText(), spectra_id=self.spectra_id)
 		self.update_comboReactions()
 		self.reload_technique()
+		# for i in range(self.idf_file.get_number_of_simulations(spectra_id = self.spectra_id)):
+		# 	self.idf_file.remove_simulation_entry(self.spectra_id, i)
+
 		self.idf_file.append_simulation_entry(len(reactions), spectra_id = self.spectra_id)
 		self.update_comboSimulations()
+
+		self.geo_projectile_in.setText(reactions[0]['incidentparticle'])
+		self.geo_projectile_out.setText(reactions[0]['exitparticle'])
+
 
 
 	def open(self, fileName = ''):
 		if fileName == False:
-		  options = QFileDialog.Options()
-		  fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml)", options=options)
+			if self.ndf_window.isVisible():
+				self.ndf_window.close()
+
+			options = QFileDialog.Options()
+			fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml)", options=options)
 
 
 		if fileName != '':
@@ -746,6 +816,8 @@ class Window(QMainWindow, Ui_MainWindow):
 			frame = self.frameGeometry()
 			self.ndf_window.move(frame.x() + frame.width(), frame.y())
 
+		self.ndf_window.activateWindow()
+
 
 
 
@@ -754,18 +826,32 @@ class Window(QMainWindow, Ui_MainWindow):
 		print('Files cleared')
 		ext_toclear = ['.geo','.str', '.prf' ,'.spc', '.bat', 
 						'.dat', '.res', '.11', '.01', '.pe',
-						'.ord', '.log', '.spx', '.idv', '.res'
+						'.ord', '.log', '.spx', '.res'
 				]
+
 		ext_dir_toclear = ['_idv']
 
+		name = self.file.split('.')[0]
+
 		for ext in ext_toclear:
-			files = glob(self.path_dir + '*' + ext)
+			files = glob(self.path_dir + name + '*' + ext)
 			for f in files:
 				remove(f)
+
 		for ext in ext_dir_toclear:
-			dirs = glob(self.path_dir + '*' + ext)
+			dirs = glob(self.path_dir + name + '*' + ext)
 			for d in dirs:
 				rmtree(d)
+		
+	def clear_idv_file(self):
+		name = self.file.split('.')[0] + '.idv'
+		files = glob(self.path_dir + name)
+		for f in files:
+			remove(f)
+
+		self.reload_button()
+
+
 
 	def remove_results_from_IDF(self):
 		for spectra in range(self.nspectra):
@@ -789,6 +875,15 @@ class Window(QMainWindow, Ui_MainWindow):
 		ncols = self.profile_nlayers.value()
 		self.profile_table.setRowCount(ncols)
 
+	def reload_button(self):
+		if self.ndf_window.isVisible():
+			self.ndf_window.close()
+		
+		self.idf_file = IDF(self.path)
+		self.open(fileName = self.idf_file.file_path)
+
+		self.runList.setCurrentRow(self.runList.count()-1)
+		
 	def reload_window(self):
 		if self.debug: print('NDF_gui, reload_window - reset_window begins')
 		self.reset_window()
@@ -822,6 +917,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			except Exception as e:
 				if self.debug: raise e
 				pass
+
 
 			self.add_menu_to_button(self.copySpectra_button)
 			self.add_menu_to_button(self.copyNDFparam_button)
@@ -966,12 +1062,13 @@ class Window(QMainWindow, Ui_MainWindow):
 	def set_geometry_box(self):
 		try:
 			params = self.idf_file.get_geo_parameters(spectra_id=self.spectra_id) 
+			params['window'][0] = self.convert_window_energy(params['window'][0])
+			params['window'][1] = self.convert_window_energy(params['window'][1])
+
 		except Exception as e:
 			if self.debug: raise e
 			return
 
-		params['window'][0] = self.convert_window_energy(params['window'][0])
-		params['window'][1] = self.convert_window_energy(params['window'][1])
 
 		pairs_params = {
 			'beam_energy' : self.geo_energy,
@@ -1022,6 +1119,15 @@ class Window(QMainWindow, Ui_MainWindow):
 			particles = self.idf_file.get_SIMS_particles(spectra_id=self.spectra_id)
 			if particles is not None:
 				self.geo_projectile_out.setText(' '.join(particles))
+		elif technique == 'ERDA':
+			reactions = self.idf_file.get_reactions(spectra_id=self.spectra_id)
+
+			if reactions is not None:
+				exitparticle = reactions[0]['exitparticle']
+				if exitparticle is None:
+					exitparticle = ''
+				
+				self.geo_projectile_out.setText(exitparticle)
 
 
 
@@ -1030,39 +1136,53 @@ class Window(QMainWindow, Ui_MainWindow):
 	def set_geometry_fit_box(self):
 		pairs = {
 			'energy':{
-				'check': self.checkEnergy,
-				'field': self.geo_energy_fit,
+				'check' : self.checkEnergy,
+				'field' : self.geo_energy_fit,
 				'method': self.idf_file.get_beam_energy_fitparam},
-			'fwhm': {
-				'check': self.checkFWHM,
-				'field': self.geo_fwhm_fit,
+			'fwhm'  :{
+				'check' : self.checkFWHM,
+				'field' : self.geo_fwhm_fit,
 				'method': self.idf_file.get_beam_energy_spread_fitparam},
 			'window_min': {
-				'check': self.checkWindow,
-				'field': self.geo_window_min,
+				'check' : self.checkWindow,
+				'field' : self.geo_window_min,
 				'method': self.idf_file.get_window_min},
 			'window_max': {
-				'check': self.checkWindow,
-				'field': self.geo_window_max,
+				'check' : self.checkWindow,
+				'field' : self.geo_window_max,
 				'method': self.idf_file.get_window_max},
-			'angle_in':{
-				'check': self.checkAngles,
-				'field': self.geo_angle_in_fit,
-				'method': self.idf_file.get_incident_angle_fitparam},
-			'angle_out':{
-				'check': self.checkAngles,
-				'field': self.geo_angle_out_fit,
-				'method': self.idf_file.get_scattering_angle_fitparam},
-			'charge':{
-				'check': self.checkCharge,
-				'field': None, 
+			# 'angle_in'  :{
+			# 	'check' : self.checkAngles,
+			# 	'field' : self.geo_angle_in_fit,
+			# 	'method': self.idf_file.get_incident_angle_fitparam},
+			# 'angle_out' :{
+			# 	'check' : self.checkAngles,
+			# 	'field' : self.geo_angle_out_fit,
+			# 	'method': self.idf_file.get_scattering_angle_fitparam},
+			'angles':{
+					'check': self.checkAngles,
+					'field': [self.geo_angle_in_fit, self.geo_angle_out_fit],
+					'method': self.idf_file.get_angles_fitparam},
+			'charge'    :{
+				'check' : self.checkCharge,
+				'field' : None, 
 				'method': self.idf_file.get_charge_fitparam},
 			'calibration':{
-				'check': self.checkCalibration,
-				'field': None, 
+				'check' : self.checkCalibration,
+				'field' : None, 
 				'method': self.idf_file.get_energy_calibration_fitparam},
+			'foil':{
+				'check': self.ndf_more_options_window.checkFoil,
+				'field': [self.ndf_more_options_window.foilMaterialCombo, self.ndf_more_options_window.foilMaterialThickness],
+				'method': self.idf_file.get_detector_foil},
+			'rutherford':{
+				'check': self.ndf_more_options_window.checkRutherford,
+				'field': None,
+				'method': self.idf_file.get_rutherford_cross},
+
 		}
 
+		# self.ndf_more_options_window.checkFoil.setChecked(True)
 
 		for k, p in pairs.items():
 			value = p['method'](spectra_id = self.spectra_id, simulation_id=self.simulation_id)
@@ -1070,19 +1190,27 @@ class Window(QMainWindow, Ui_MainWindow):
 			if 'window' in k:
 				value = self.convert_window_energy(value)
 
-
 			if k == 'calibration':
-				if value == ['True', 'True']:
-					p['check'].setChecked(True)
-				else:
-					p['check'].setChecked(False)
-
+				p['check'].setChecked(value == ['True', 'True'])
 			elif k == 'charge':
-				if value == 'True': p['check'].setChecked(True)
-				else: p['check'].setChecked(False)
+				p['check'].setChecked(value == 'True')
+			elif k == 'foil':
+				if value[0] == '': value[0] = None
+				p['check'].setChecked(value[0] != None)
+				p['field'][0].setEnabled(value[0] != None)
+				p['field'][1].setEnabled(value[0] != None)
+
+				if value[0] != None:
+					combo_index = p['field'][0].findText(value[0].capitalize(), flags = Qt.MatchContains)
+					p['field'][0].setCurrentIndex(combo_index)
+					p['field'][1].setText(value[1])
+			elif k == 'rutherford':
+				if value[0] != None:
+					p['check'].setChecked(not value[0])
+
 
 			elif isinstance(value, list):
-				if None in value:
+				if None in value or '' in value:
 					p['check'].setChecked(False)
 					p['field'][0].setEnabled(False)
 					p['field'][1].setEnabled(False)
@@ -1215,15 +1343,24 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.runList.setCurrentRow(index_run)
 			self.runList.blockSignals(False)
 
-			for i in range(self.nspectra):
+			for i in range(self.idf_file.get_number_of_spectra()):
 				self.idf_file.set_spectra_result(spectra_id = i)
 				self.idf_file.set_geometry_result(spectra_id = i)
 				self.idf_file.set_elements_result(spectra_id = i)
 				self.idf_file.set_profile_result(spectra_id  = i)
+			
 			self.set_results_box()
 
 			self.idf_file.save_idf(self.idf_file.file_path)
 			self.project.save()
+
+			run_states = self.project.check_simulations_running()
+			if True not in run_states:
+				self.pushLoad_results.setEnabled(False)
+				if not self.settings['Actions'].getboolean('keep_NDF_files'):			
+					self.clear_files()
+
+
 		except Exception as e:
 			if self.debug: raise e
 			print('Result files not found')
@@ -1254,11 +1391,13 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.idf_file = IDF(self.path)
 		else:
 			if self.debug: print('NDF_gui, change_idf_version - deep copy made of i:', index_run)
+
 			if '[R]' in text_run:
 				self.load_results(index_run = index_run)
 			else:
 				self.idf_file = deepcopy(self.project.sim_version_history[-(index_run + 1)])
 		
+
 		if self.debug: print('NDF_gui, change_idf_version - ',  self.idf_file.path_dir)
 
 		spectra_id_old = self.spectra_id
@@ -1281,10 +1420,22 @@ class Window(QMainWindow, Ui_MainWindow):
 	def set_spectra_fit_result_tab(self):
 		self.figure_result.clear()
 
-		data_x_fit, data_y_fit = self.idf_file.get_dataxy_fit(spectra_id = self.spectra_id, simulation_id = self.simulation_id)
+		data_y_list = []
+		reactions = self.idf_file.get_reactions(spectra_id = self.spectra_id)
+		if reactions is None:
+			nreactions = 1
+			reactions = [{'code':''}]
+		else:
+			nreactions = len(reactions)
+
+		for i in range(nreactions):
+			data_x_fit, data_y_fit = self.idf_file.get_dataxy_fit(spectra_id = self.spectra_id, simulation_id = i)
+			data_y_list.append(data_y_fit)
+
 		data_x_given, data_y_given = self.idf_file.get_dataxy(spectra_id = self.spectra_id)
 
-		if data_x_fit is None: return
+		if data_x_fit is None or len(data_x_given) == 0:
+			data_x_given, data_y_given = [], []
 
 		self.ax_result = self.figure_result.add_subplot(111)
 
@@ -1310,32 +1461,56 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.ax_result.legend(frameon = False, ncol= 2, loc='center left', bbox_to_anchor=(1, 0.5))
 
 		else:
-			cut_channel = int(self.settings['Appearance']['cut_off_channel'])
+			cut_channel_min = int(self.settings['Appearance']['cut_off_channel'])
+			cut_channel_max = len(data_x_given)
+			# to account for pure simulation cases
+			if cut_channel_max == 0: cut_channel_max = len(data_y_fit)
 			
 			m = 1
 			b = 0
-			if self.settings['Appearance'].getboolean('energy_scale_keV'):
-				calib = self.idf_file.get_energy_calibration_fit_result(spectra_id = self.spectra_id, simulation_id = self.simulation_id) 
-				if calib is not None:
-					m, b = calib[0], calib[1]
-			
-			self.ax_result.plot(m*nparray(data_x_given[cut_channel:]) + b, data_y_given[cut_channel:], 'o', ms = 2, label = 'Exp.')
-			self.ax_result.plot(m*nparray(data_x_fit[cut_channel:]) + b, data_y_fit[cut_channel:], label = 'Fit')
-			
-			if self.settings['Appearance'].getboolean('show_elemental_fits'):
-				data_ele = self.idf_file.get_elemental_dataxy_fit(spectra_id = self.spectra_id, simulation_id = self.simulation_id)
+			data_y_sum = npzeros_like(data_y_list[0])
 
-				for name, y in data_ele.items():
-					if name == 'x':
-						continue
-					self.ax_result.plot(m*nparray(data_ele['x'][cut_channel:]) + b, y[cut_channel:], '--', label = name)
+			for i in range(nreactions):
+				## get calibration
+				if self.settings['Appearance'].getboolean('energy_scale_keV'):
+					calib = self.idf_file.get_energy_calibration_fit_result(spectra_id = self.spectra_id, simulation_id = i) 
+					if calib is not None:
+						m, b = calib[0], calib[1]
+					else:
+						m, b = 1, 0
 				
+				# get the fit for this reaction
+				data_y_fit = data_y_list[i]
+				# add to the total (this will be wrong if different calibrations are used and the plot is in energy)
+				data_y_sum = data_y_sum + data_y_fit
+
+
+				if i == 0:			
+					self.ax_result.plot(m*nparray(data_x_given[cut_channel_min:cut_channel_max]) + b, data_y_given[cut_channel_min:cut_channel_max], 'o', ms = 2, label = 'Exp.')
+
+				self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_fit[cut_channel_min:cut_channel_max], label = 'Fit ' + reactions[i]['code'])
+
+				# this condition is separeted from the one above so that the plot looks more organized
+				# if i == nreactions - 1 and i != 0:
+				# 	self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_sum[cut_channel_min:cut_channel_max], ms = 2, label = 'Fit. Total')
+				
+				if self.settings['Appearance'].getboolean('show_elemental_fits'):
+					try:
+						data_ele = self.idf_file.get_elemental_dataxy_fit(spectra_id = self.spectra_id, simulation_id = i)
+
+						for name, y in data_ele.items():
+							if name == 'x':
+								continue
+							self.ax_result.plot(m*nparray(data_ele['x'][cut_channel_min:cut_channel_max]) + b, y[cut_channel_min:cut_channel_max], '--', label = name + ' ' + reactions[i]['code'])
+					except Exception as e:
+						if self.debug: raise e							
+						pass
 
 			if self.settings['Appearance'].getboolean('energy_scale_keV'):
 				self.ax_result.set_xlabel('Energy (keV)')
 			else:
 				self.ax_result.set_xlabel('Energy (Channels)')
-			self.ax_result.legend(frameon=False)
+			self.ax_result.legend(frameon=False, ncol = 2)
 
 
 
@@ -1349,28 +1524,28 @@ class Window(QMainWindow, Ui_MainWindow):
 	def set_geometry_fit_result_tab(self):
 		pairs = {
 			'energy':{
-						'field':self.geo_energy_fit_result, 
+						'field' : self.geo_energy_fit_result, 
 						'method': self.idf_file.get_beam_energy_fit_result
 					},
 			'fwhm'  :{
-						'field':self.geo_fwhm_fit_result,
-						'method':self.idf_file.get_beam_energy_spread_fit_result
+						'field' : self.geo_fwhm_fit_result,
+						'method': self.idf_file.get_beam_energy_spread_fit_result
 					},
 			'angle_in':{
-						'field': self.geo_angle_in_fit_result,
-						'method':self.idf_file.get_incident_angle_fit_result
+						'field' : self.geo_angle_in_fit_result,
+						'method': self.idf_file.get_incident_angle_fit_result
 					},
 			'angle_out':{
-						'field': self.geo_angle_out_fit_result,
-						'method':self.idf_file.get_scattering_angle_fit_result
+						'field' : self.geo_angle_out_fit_result,
+						'method': self.idf_file.get_scattering_angle_fit_result
 					},
 			'charge':{
-						'field': self.geo_charge_fit_result,
-						'method':self.idf_file.get_charge_fit_result
+						'field' : self.geo_charge_fit_result,
+						'method': self.idf_file.get_charge_fit_result
 					},
 			'calibration':{
-						'field': [self.geo_calibration_m_fit_result, self.geo_calibration_b_fit_result],
-						'method':self.idf_file.get_energy_calibration_fit_result
+						'field' : [self.geo_calibration_m_fit_result, self.geo_calibration_b_fit_result],
+						'method': self.idf_file.get_energy_calibration_fit_result
 					},
 			}
 
@@ -1384,6 +1559,8 @@ class Window(QMainWindow, Ui_MainWindow):
 			elif value is not None:
 				value = float(value)
 				p['field'].setText(str(value))
+
+
 
 
 
@@ -1513,6 +1690,9 @@ class Window(QMainWindow, Ui_MainWindow):
 	
 	
 	def delete_spectrum(self):
+		if self.ndf_window.isVisible():
+			self.ndf_window.close()
+
 		oldIndex = self.comboSpectrum_id.currentIndex()
 
 		self.idf_file.delete_spectrum(spectra_id=self.spectra_id)
@@ -1525,12 +1705,20 @@ class Window(QMainWindow, Ui_MainWindow):
 	
 
 	def append_spectrum(self):
-		self.save_geometry_box()
-		self.nspectra +=1
+		if self.ndf_window.isVisible():
+			self.ndf_window.close()
 
-		# self.spectra_id = self.nspectra - 1
-		self.idf_file.append_spectrum_entry(self.nspectra)
-		self.load_spectrum(spectra_id = self.nspectra - 1)
+		self.save_geometry_box()
+
+		options = QFileDialog.Options()
+		file_names, _ = QFileDialog.getOpenFileNames(self, "Open spectrum file...", ""	, "All Files (*)", options=options)
+		
+
+		for file in file_names:
+			self.nspectra +=1
+			self.idf_file.append_spectrum_entry(self.nspectra)
+			self.load_spectrum(spectra_id = self.nspectra - 1, fileName = file)
+
 
 		# to change the window to the last spectrum, i.e. the appended one
 		self.spectra_id = self.nspectra - 1
@@ -1554,32 +1742,53 @@ class Window(QMainWindow, Ui_MainWindow):
 
 				if 'GUPIX' in line1:
 					self.idf_file.load_pixe_data_from_file(fileName, spectra_id=spectra_id)
-					self.idf_file.set_technique('PIXE', spectra_id=spectra_id)
-					self.comboTechnique.setCurrentIndex(2)
+					# self.idf_file.set_technique('PIXE', spectra_id=spectra_id)
+					# self.comboTechnique.setCurrentIndex(2)
+					technique = 'PIXE'
+					technique_id = 2
 				elif 'SIMS' in fileName:
 					self.idf_file.set_SIMS_from_file(fileName, spectra_id=spectra_id)
-					self.idf_file.set_technique('SIMS', spectra_id=spectra_id)
-					self.comboTechnique.setCurrentIndex(3)
+					# self.idf_file.set_technique('SIMS', spectra_id=spectra_id)
+					# self.comboTechnique.setCurrentIndex(4)
+					technique = 'SIMS'
+					technique_id = 4
 				else:
 					if len(line1.split()) == 8:
 						mode = '8 columns'
+						technique = 'RBS'
+						technique_id = 0
+					elif '[DISPLAY]' in line1:
+						mode = 'potku'
+						technique = 'ERDA'
+						technique_id = 3
 					else:
 						mode = 'channels vs yield'
+						technique = 'RBS'
+						technique_id = 0
+
 
 					self.idf_file.set_spectrum_data_from_file(fileName, mode = mode, spectra_id=spectra_id)
-					# set technique to RBS since it will be the most commonly used
-					self.idf_file.set_technique('RBS', spectra_id=spectra_id)                   
-					self.comboTechnique.setCurrentIndex(0)      
-					# self.reload_technique()
+			
+				# set technique to RBS since it will be the most commonly used
+				self.idf_file.set_technique(technique, spectra_id=spectra_id)                   
+				self.comboTechnique.setCurrentIndex(technique_id)      
+				# self.reload_technique()
+
 
 				if self.nspectra == 0: self.nspectra = 1
-
 
 
 				self.set_spectrum_box()
 				self.update_comboSpectrum_id()
 
-				# self.spectra_id = spectra_id
+				## set initial window
+				datax, _ = self.idf_file.get_dataxy(spectra_id = spectra_id)
+				self.idf_file.set_window_min(datax.min(), spectra_id = spectra_id)
+				self.idf_file.set_window_max(datax.max(), spectra_id = spectra_id)
+				self.geo_window_min.setText(str(datax.min()))
+				self.geo_window_max.setText(str(datax.max()))
+
+
 
 			except Exception as e:
 				msg = QMessageBox()
@@ -1591,8 +1800,6 @@ class Window(QMainWindow, Ui_MainWindow):
 				result = msg.exec_()
 
 				if self.debug: raise e
-
-			
 
 
 	def reload_technique(self):
@@ -1621,71 +1828,46 @@ class Window(QMainWindow, Ui_MainWindow):
 		for widget in invisible_list:
 			widget.setVisible(True)
 
-		self.gridLayout.addWidget(self.geo_projectile_out, 3, 2)
-		self.gridLayout.addWidget(self.geo_charge, 4, 1)
-		self.gridLayout.addWidget(self.geo_geometry, 5, 1)
-		self.gridLayout.addWidget(self.geo_angle_in, 6, 1)
-		self.gridLayout.addWidget(self.geo_angle_out, 6, 2)
+		self.geo_calibration_m.setFixedWidth(83)
+		self.geo_calibration_m.setReadOnly(False)
+		self.geo_projectile_out.setEnabled(False)
 
-		self.gridLayout.addWidget(self.label_geo_charge, 4, 0)
-		self.gridLayout.addWidget(self.label_geo_geometry, 5, 0)
-		self.gridLayout.addWidget(self.label_geo_angles, 6, 0)
-
-		self.label_geo_fwhm.setText('FWHM')
-		self.checkFWHM.setText('FWHM')
-
-		self.gridLayout.removeItem(self.spacerItem)
-		self.gridLayout_3.removeItem(self.spacerItem_result)
-
-		# self.gridLayout_3.removeItem(self.verticalSpacer_geo_result)
 
 		if self.comboTechnique.currentText() == 'SIMS':
 			for widget in invisible_list:
 				widget.setVisible(False)
-			
-			
 
-			self.gridLayout.removeWidget(self.geo_charge)
-			self.gridLayout.removeWidget(self.geo_geometry)
-			self.gridLayout.removeWidget(self.geo_angle_in)
-			self.gridLayout.removeWidget(self.geo_angle_out)
+			# self.gridLayout.removeWidget(self.geo_charge)
+			# self.gridLayout.removeWidget(self.geo_geometry)
+			# self.gridLayout.removeWidget(self.geo_angle_in)
+			# self.gridLayout.removeWidget(self.geo_angle_out)
 
-			self.gridLayout.removeWidget(self.label_geo_charge)
-			self.gridLayout.removeWidget(self.label_geo_geometry)
-			self.gridLayout.removeWidget(self.label_geo_angles)
+			# self.gridLayout.removeWidget(self.label_geo_charge)
+			# self.gridLayout.removeWidget(self.label_geo_geometry)
+			# self.gridLayout.removeWidget(self.label_geo_angles)
 
-			self.gridLayout.addWidget(self.geo_projectile_out, 4,1,1,-1)
+			# self.gridLayout.addWidget(self.geo_projectile_out, 4,1,1,-1)
 
 			self.label_geo_fwhm.setText('Resolution')
 			self.checkFWHM.setText('Resolution')
 
 
-			self.gridLayout.addItem(self.spacerItem)
+			# self.gridLayout.addItem(self.spacerItem)
 			self.gridLayout_3.addItem(self.spacerItem_result)
-			# self.gridLayout_3.setRowStretch(7, 1)
-
-			# self.geo_projectile_in.setText(self.idf_file.get_beam_particles(spectra_id=self.spectra_id)[0])
-			# self.geo_projectile_out.setText('aa')
-
-
-		elif reactions is None:
-			if self.comboTechnique.currentText() == 'NRA':
-				self.comboReactions.setVisible(True)
-			else:
-				self.comboReactions.setVisible(False)
-
-			self.geo_projectile_in.setReadOnly(False)
-			self.geo_projectile_out.setReadOnly(False)
+			
 
 		elif self.comboTechnique.currentText() == 'RBS':
 			self.geo_projectile_in.setReadOnly(False)
 			self.geo_projectile_out.setReadOnly(True)
-			self.geo_projectile_in.setText(reactions[0]['incidentparticle'])
-			self.geo_projectile_out.setText(self.geo_projectile_in.text())
+			# self.geo_projectile_in.setText(reactions[0]['incidentparticle'])
+			# self.geo_projectile_out.setText(self.geo_projectile_in.text())
 
-			if len(reactions)>1:
-				self.comboReactions.setVisible(True)
-				self.update_comboReactions()
+			if reactions is not None:
+				if len(reactions)>2:
+					self.comboReactions.setVisible(True)
+					self.update_comboReactions()
+				else:
+					self.comboReactions.setVisible(False)	
 			else:
 				self.comboReactions.setVisible(False)
 
@@ -1702,7 +1884,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 			self.geo_projectile_in.setReadOnly(True)
 			self.geo_projectile_out.setReadOnly(True)
-			self.geo_projectile_in.setText(reactions[0]['incidentparticle'])
+			# self.geo_projectile_in.setText(reactions[0]['incidentparticle'])
 			self.geo_projectile_out.setText('-')
 
 
@@ -1710,17 +1892,26 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.comboReactions.setVisible(False)
 			self.geo_projectile_in.setReadOnly(False)
 			self.geo_projectile_out.setReadOnly(True)
-			self.geo_projectile_in.setText(reactions[0]['incidentparticle'])
 			self.geo_projectile_out.setText('X-Ray')
+			self.geo_calibration_b.setVisible(False)
+			self.geo_calibration_m.setFixedWidth(140)
+			self.geo_calibration_m.setReadOnly(True)
 
 
-		
+
+		elif self.comboTechnique.currentText() == 'ERDA':
+			self.geo_projectile_in.setReadOnly(False)
+			self.geo_projectile_out.setReadOnly(True)
+			self.comboReactions.setVisible(True)
+			self.update_comboReactions()
 
 
 		# self.save_geometry_box()
 
 
+
 	def reload_geoprojout(self):
+		# schedule for deletion
 		if self.comboTechnique.currentText() =='RBS':
 			self.geo_projectile_out.setText(self.geo_projectile_in.text())
 
@@ -1732,7 +1923,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def reload_spectra_box(self):
 		technique = self.idf_file.get_technique(spectra_id=self.spectra_id)
-		if technique in ['RBS', 'NRA', 'PIXE', 'SIMS']:
+		if technique in ['RBS', 'NRA', 'PIXE', 'ERDA', 'SIMS']:
 			combo_index = self.comboTechnique.findText(technique, flags = Qt.MatchContains)
 		else:
 			combo_index = -1
@@ -1743,10 +1934,6 @@ class Window(QMainWindow, Ui_MainWindow):
 	def reload_models_box(self):
 		self.update_comboSimulations()
 
-
-
-
-
 	def set_spectra_box(self):
 		self.set_spectrum_box()
 		self.set_geometry_box()
@@ -1756,6 +1943,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# self.figure = plt.figure(figsize=(5,2))
 		self.ax = self.figure_exp_spectra.add_subplot(111)
+
 
 		try:
 			data_x, data_y = self.idf_file.get_dataxy(spectra_id=self.spectra_id)
@@ -1785,9 +1973,10 @@ class Window(QMainWindow, Ui_MainWindow):
 			m = 1
 			b = 0
 			if self.settings['Appearance'].getboolean('energy_scale_keV'):
-				calib = self.idf_file.get_energy_calibration_fit_result(spectra_id = self.spectra_id, simulation_id = self.simulation_id) 
-				if calib is not None:
+				calib = self.idf_file.get_energy_calibration(spectra_id = self.spectra_id) 
+				if None not in calib:
 					m, b = calib[0], calib[1]
+
 
 			self.ax.plot(m*data_x[cut_channel:] + b, data_y[cut_channel:])
 			if self.settings['Appearance'].getboolean('energy_scale_keV'):
@@ -1942,57 +2131,56 @@ class Window(QMainWindow, Ui_MainWindow):
 		pairs = [
 			{'field': self.geo_energy, 'method': self.idf_file.set_beam_energy},
 			{'field': self.geo_fwhm, 'method': self.idf_file.set_beam_energy_spread},
-			{'field': self.geo_projectile_in, 'method': self.idf_file.set_beam_particles},
 			{'field': self.geo_charge, 'method': self.idf_file.set_charge},
 			{'field': self.geo_angle_in, 'method': self.idf_file.set_incident_angle},
 			{'field': self.geo_angle_out, 'method': self.idf_file.set_scattering_angle},
 			{'field': self.geo_solid_angle, 'method': self.idf_file.set_detector_solid_angle},
 		]
 
+		for pair in pairs:
+			try:
+				text = pair['field'].text()
+				if text not in ['', None]:
+					_  = float(text)
+			except Exception as e:
+				print(e)
+				self.error_window.setText('Check geometry input\n' + str(e))
+				self.error_window.exec_()
+
+		pairs.append({'field': self.geo_projectile_in, 'method': self.idf_file.set_beam_particles})
+
 		if target_spectra_id == '':
 			spectra_id = self.spectra_id
 		else:
 			spectra_id = target_spectra_id
 
+
 		for p in pairs:
 			value = p['field'].text()
 			if value != '-':
 				p['method'](value, spectra_id=spectra_id)
-
-		# energy = self.geo_energy.text()
-		# self.idf_file.set_beam_energy(energy, spectra_id=self.spectra_id)
-		
-		# fwhm = self.geo_fwhm.text()
-		# self.idf_file.set_beam_energy_spread(fwhm, spectra_id=self.spectra_id)
-		
-		# particle = self.geo_projectile_in.text()
-		# self.idf_file.set_beam_particles(particle, spectra_id=self.spectra_id)
-		
-
-		# charge = self.geo_charge.text()
-		# self.idf_file.set_charge(charge, spectra_id=self.spectra_id)
 		
 		
 		geometry = self.geo_geometry.currentText()
 		self.idf_file.set_geometry_type(geometry, spectra_id=spectra_id)
 		
-		
-		# incident_angle = self.geo_angle_in.text()
-		# scatter_angle = self.geo_angle_out.text()
-		# self.idf_file.set_incident_angle(incident_angle, spectra_id=self.spectra_id)
-		# self.idf_file.set_scattering_angle(scatter_angle, spectra_id=self.spectra_id)
-
-		# solid_ange = self.geo_solid_angle.text()
-		# self.idf_file.set_detector_solid_angle(solid_ange, spectra_id=self.spectra_id)
-
-		m_calib = self.geo_calibration_m.text()
-		b_calib = self.geo_calibration_b.text()
-		self.idf_file.set_energy_calibration(m_calib, b_calib, spectra_id=spectra_id)
 
 		technique = self.comboTechnique.currentText()
 		self.idf_file.set_technique(technique, spectra_id=spectra_id)
 
-		if technique == 'PIXE':
+
+		if technique == 'RBS':
+			reaction = {
+				'initialtargetparticle': '',
+				'incidentparticle': self.geo_projectile_in.text(),
+				'exitparticle': self.geo_projectile_in.text(),
+				'finaltargetparticle': '',
+				'reactionQ': '',
+				'code':'(%s, %s)' %(self.geo_projectile_in.text(), self.geo_projectile_out.text())
+				}
+			self.idf_file.set_reactions(reaction, append = False, spectra_id=spectra_id)
+		
+		elif technique == 'PIXE':
 			reaction = {
 				'initialtargetparticle': '',
 				'incidentparticle': self.geo_projectile_in.text(),
@@ -2001,7 +2189,17 @@ class Window(QMainWindow, Ui_MainWindow):
 				'reactionQ': '',
 				'code':''
 				}
-			self.idf_file.set_reactions(reaction, spectra_id=spectra_id)
+			self.idf_file.set_reactions(reaction, append = False, spectra_id=spectra_id, linked_calibrations = False)
+		
+		
+		if technique in ['RBS', 'NRA', 'ERDA']:
+			reaction_id = self.comboReactions.currentIndex()
+			if reaction_id is None:
+				reaction_id = 0
+
+			m_calib = self.geo_calibration_m.text()
+			b_calib = self.geo_calibration_b.text()
+			self.idf_file.set_energy_calibration(m_calib, b_calib, spectra_id=spectra_id, reaction_id = reaction_id)
 
 
 
@@ -2033,8 +2231,11 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.elements_table.removeRow(row)
 
 		nrows = nrows - len(rows_del)
+		if nrows < 1:
+			nrows = 1
+
 		self.elements_nelements.setValue(nrows)
-				
+		self.resize_elements_table()	
 
 		for i in range(nrows):
 			col_params = []
@@ -2053,8 +2254,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 			if name == '':
 				self.set_element_color(self.elements_table, 'QTableWidget')
-				self.error_window.setText('Elements not well defined')
-				self.error_window.exec_()
+				# self.error_window.setText('Elements not well defined')
+				# self.error_window.exec_()
 
 			else:
 				# introduce spaces between elements and numbers
@@ -2170,7 +2371,7 @@ class Window(QMainWindow, Ui_MainWindow):
 	   #      ]
 
 
-	def save_geometry_box_fits(self, target_spectra_id = ''):
+	def save_geometry_box_fits(self, target_spectra_id = '', target_simulation_id = ''):
 		pairs = {
 			'energy':{
 				'check': self.checkEnergy,
@@ -2204,6 +2405,14 @@ class Window(QMainWindow, Ui_MainWindow):
 				'check': self.checkCalibration,
 				'field': None, #[self.geo_calibration_m_fit, self.geo_calibration_b_fit],
 				'method': self.idf_file.set_energy_calibration_fitparam},
+			'foil':{
+				'check': self.ndf_more_options_window.checkFoil,
+				'field': [self.ndf_more_options_window.foilMaterialCombo, self.ndf_more_options_window.foilMaterialThickness],
+				'method': self.idf_file.set_detector_foil},
+			'rutherford':{
+				'check': self.ndf_more_options_window.checkRutherford,
+				'field': None,
+				'method': self.idf_file.set_rutherford_cross},
 		}
 
 		if target_spectra_id == '':
@@ -2211,30 +2420,44 @@ class Window(QMainWindow, Ui_MainWindow):
 		else:
 			spectra_id = target_spectra_id
 
+		if target_simulation_id == '':
+			simulation_id = self.simulation_id
+		else:
+			simulation_id = target_simulation_id
+
+
 		for k, p in pairs.items():
 			if k == 'calibration':
-				p['method'](p['check'].isChecked(), p['check'].isChecked(), spectra_id = spectra_id, simulation_id = self.simulation_id)
+				p['method'](p['check'].isChecked(), p['check'].isChecked(), spectra_id = spectra_id, simulation_id = simulation_id)
 			elif k == 'charge':
-				p['method'](p['check'].isChecked(), spectra_id = spectra_id, simulation_id = self.simulation_id)
+				p['method'](p['check'].isChecked(), spectra_id = spectra_id, simulation_id = simulation_id)
+			elif k == 'rutherford':
+				p['method'](not p['check'].isChecked(), self.settings['nonRutherford']['ebsfiles'], spectra_id = spectra_id, simulation_id = simulation_id)
+			elif k == 'foil':
+				if p['check'].isChecked():
+					p['method'](p['field'][0].currentText(), p['field'][1].text(), spectra_id = spectra_id, simulation_id = simulation_id)
+				else:
+					p['method']('', '', spectra_id = spectra_id, simulation_id = simulation_id)
+
 
 			elif p['check'].isChecked():
 				if isinstance(p['field'], list):
-					p['method'](p['field'][0].text(), p['field'][1].text(), spectra_id = spectra_id, simulation_id = self.simulation_id)
+					p['method'](p['field'][0].text(), p['field'][1].text(), spectra_id = spectra_id, simulation_id = simulation_id)				
 				else:
 					value = p['field'].text()
 					if 'window' in k:
 						value = self.convert_window_energy(value, channel2energy = False)
 
-					p['method'](value,  spectra_id=spectra_id, simulation_id = self.simulation_id)
+					p['method'](value,  spectra_id=spectra_id, simulation_id = simulation_id)
 			else:
 				if isinstance(p['field'], list):
-					p['method']('','',  spectra_id=spectra_id, simulation_id = self.simulation_id)
+					p['method']('','',  spectra_id=spectra_id, simulation_id = simulation_id)
 				else:
-					p['method']('',  spectra_id=spectra_id, simulation_id = self.simulation_id)
+					p['method']('',  spectra_id=spectra_id, simulation_id = simulation_id)
 
 
 
-	def save_fit_methods_box(self, target_spectra_id = ''):
+	def save_fit_methods_box(self, target_spectra_id = '', target_simulation_id = ''):
 		pairs = {
 			'pileup':{
 				'check': self.checkPileup,
@@ -2273,6 +2496,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		else:
 			spectra_id = target_spectra_id
 
+		if target_simulation_id == '':
+			simulation_id = self.simulation_id
+		else:
+			simulation_id = target_simulation_id
+
 		for k, p in pairs.items():
 			if p['check'].isChecked():
 				if isinstance(p['model'], QComboBox):
@@ -2282,17 +2510,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
 				if p['param'] is not None: 
 					param = p['param'].text()
-					p['method'](model, param,  spectra_id=spectra_id, simulation_id = self.simulation_id)
+					p['method'](model, param,  spectra_id=spectra_id, simulation_id = simulation_id)
 				else: 
-					p['method'](model,  spectra_id=spectra_id, simulation_id = self.simulation_id)
+					p['method'](model,  spectra_id=spectra_id, simulation_id = simulation_id)
 
 			else:
 				if p['param'] is not None:
-					p['method']('','',  spectra_id=spectra_id, simulation_id = self.simulation_id)
+					p['method']('','',  spectra_id=spectra_id, simulation_id = simulation_id)
 				else:
-					p['method']('',  spectra_id=spectra_id, simulation_id = self.simulation_id)
-
-
+					p['method']('',  spectra_id=spectra_id, simulation_id = simulation_id)
 
 	def message_window(self):
 		msg = QMessageBox()
@@ -2362,16 +2588,11 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 			self.ax_profile.set_ylim(-5, 120)
 			self.figure_profile.tight_layout()
 
-
-
 class About_Window(QMainWindow, Ui_dialog_about):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 		self.setupUi(self)
-
-#		self.executable_dir = dirname(realpath(__file__)) + '/'
 		self.executable_dir = osjoin(dirname(__file__), 'pyIBA') + '/'
-
 
 		self.push_openNDFManual.clicked.connect(self.open_NDF_manual)
 
@@ -2383,7 +2604,7 @@ class About_Window(QMainWindow, Ui_dialog_about):
 
 
 class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
-	def __init__(self, reactions):
+	def __init__(self, reactions, technique = 'NRA'):
 		super(Reactions_Dialog, self).__init__()
 		self.setupUi(self)
 
@@ -2400,6 +2621,15 @@ class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
 			}]
 
 		self.reactions = reactions
+
+
+		if technique == 'ERDA':
+			self.initial_target_label.setEnabled(False)
+			self.final_target_label.setEnabled(False)
+			self.QEnergy_label.setEnabled(False)
+			self.initial_target_atom.setEnabled(False)
+			self.final_target_atom.setEnabled(False)
+			self.qenergy.setEnabled(False)
 
 
 		self.update_comboReactions()
@@ -2431,8 +2661,14 @@ class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
 		self.comboReactions.setCurrentIndex(index)      
 
 	def add_reaction(self):
-		index = len(self.reactions)
-		self.reactions.append([])
+		curr_index = self.comboReactions.currentIndex()
+		if self.reactions[curr_index]['code'] != '':
+			index = len(self.reactions)
+			reaction = self.reactions[curr_index].copy()
+			self.reactions.append(reaction)
+		else:
+			index = curr_index
+
 		self.edit_reaction(index)
 		self.update_comboReactions()
 		self.comboReactions.setCurrentIndex(index)
@@ -2446,30 +2682,39 @@ class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
 		self.reactions.pop(index)
 		self.update_comboReactions()
 		if index >0:
-			self.comboReactions.setCurrentIndex(index-1)        
+			self.comboReactions.setCurrentIndex(index-1)
+		else:
+			self.comboReactions.setCurrentIndex(0) 
+		self.onchange_reaction()
 
 
 	def edit_reaction(self, index):
 		reaction = self.reactions[index]
-		reaction= {
-				'initialtargetparticle': self.initial_target_atom.text(),
-				'incidentparticle': self.incident_ion.text(),
-				'exitparticle': self.exit_ion.text(),
-				'finaltargetparticle': self.final_target_atom.text(),
-				'reactionQ': self.qenergy.text()
-		}
+		
+		reaction['initialtargetparticle'] = self.initial_target_atom.text()
+		reaction['incidentparticle'] = self.incident_ion.text()
+		reaction['exitparticle'] = self.exit_ion.text()
+		reaction['finaltargetparticle'] = self.final_target_atom.text()
+		reaction['reactionQ'] = self.qenergy.text()
 
+	
 		try:
-			energy_code = float(reaction['reactionQ'])*1e-3
+			energy_code = '%0.2f' %(float(reaction['reactionQ']))
 		except:
-			energy_code = 0
+			energy_code = ''
 
-		reaction['code'] = '%s(%s, %s)%s %0.2f' %(
+		for key, item in reaction.items():
+			if item is None:
+				reaction[key] = ''
+
+
+		reaction['code'] = '%s(%s, %s)%s %s' %(
 						reaction['initialtargetparticle'], reaction['incidentparticle'], reaction['exitparticle'], 
 						reaction['finaltargetparticle'], energy_code)
 
 		self.reactions[index] = reaction
-	
+
+
 
 	def update_comboReactions(self):
 		name_list = []

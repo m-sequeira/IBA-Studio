@@ -24,7 +24,10 @@ from PyQt5.QtCore import Qt, pyqtSlot
 
 syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
+from pyIBA.codes.IDF2NDF import IDF2NDF
 from NDF_project import project
+
+
 
 class Window(QMainWindow, Ui_MainWindow):
 	def __init__(self, main_window, parent=None):
@@ -68,7 +71,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	@pyqtSlot()
 	def on_Enter(self):
-		print('enter')
 		self.run_ndf()
 
 	def update_idf_file_version(self):
@@ -97,14 +99,13 @@ class Window(QMainWindow, Ui_MainWindow):
 		# 	f.deleteLater()
 		# for i in range(self.formLayout.rowCount()):
 		# 	self.formLayout.removeRow(i)
-			
 
 
 		names = self.idf_file.get_all_spectra_filenames()
 		
 		self.fields = []
-
-		for i in range(self.idf_file.get_number_of_spectra()):
+		nspectra = self.idf_file.get_number_of_spectra()
+		for i in range(nspectra):
 			sim_group = self.idf_file.get_simulation_group(spectra_id = i)
 			field = QLineEdit(str(sim_group[0]))
 
@@ -119,6 +120,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.set_run_options()
 
+		if nspectra > 1:
+			for f in self.fields:
+				f.setEnabled(True)
+			self.checkSharedCharge.setEnabled(True)
+			self.checkSharedCharge.setChecked(sim_group[2])
+		else:
+			for f in self.fields:
+				f.setEnabled(False)
+			self.checkSharedCharge.setEnabled(False)
 
 
 
@@ -166,6 +176,8 @@ class Window(QMainWindow, Ui_MainWindow):
 			for p in self.project.sim_version_history:
 				print('\t', p.path_dir.split('/')[-1])
 
+		self.main_window.pushLoad_results.setEnabled(True)
+
 		# create folder and copy the files from previous simulation to there (to avoid double scattering calculation etc)
 		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M:%S') + '_idv'
 		path_new_idf = new_folder + '/' + self.idf_file.name + '.xml'
@@ -180,13 +192,15 @@ class Window(QMainWindow, Ui_MainWindow):
 				mkdir(new_folder)
 
 		except Exception as e:
-			if self.debug: raise e
-			pass
+			# if self.debug: raise e
+			mkdir(new_folder)
 
+		## Save everything
 		self.idf_file = self.main_window.idf_file
 		self.main_window.save_state()
 		for i,f in enumerate(self.fields):
-			self.idf_file.set_simulation_group(f.text(), spectra_id=i)
+			self.idf_file.set_simulation_group(f.text(), shared_charge = self.checkSharedCharge.isChecked(), spectra_id=i)			
+
 		self.save_run_options(self.idf_file)
 		
 		# a copy of self.idf_file should be created before saving to avoid changing the origianl path_dir 
@@ -204,9 +218,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# idf_file_run.save_idf(new_folder + '/' + self.idf_file.name + '.xml')
 		self.project.save()
-
-		# self.project.sim_version_history.append(idf_file_run)
-
+		
+		## decompress the IDF file into NDF files here instead of sentind the xml file to the NDF
+		try:
+			idf_file_run.export_ndf_inputs(path_dir = idf_file_run.path_dir)
+		except Exception as e:
+			if self.main_window.debug: raise e
+			self.main_window.error_window.setText('Check geometry input\n' + str(e))
+			self.main_window.error_window.exec_()
+			return
 
 		OSname = platform()
 		if 'Linux' in OSname:
@@ -214,6 +234,9 @@ class Window(QMainWindow, Ui_MainWindow):
 		elif 'Windows' in OSname:
 			self.run_ndf_windows(idf_file_run)
 
+
+		self.main_window.update_runList()
+		self.main_window.runList.setCurrentRow(0)
 
 		# dump(self.project, open(self.project.path_dir + self.project.name + '.idv', 'wb'))
 		
@@ -233,7 +256,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 		path = idf_file.path_dir
-		file = idf_file.name + '.xml'
+		# file = idf_file.name + '.xml'
+		file = idf_file.spc_files[0]
 
 		# cwd = getcwd()
 		cwd = idf_file.executable_dir[:-1]
@@ -252,6 +276,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		# run = subprocess.Popen(['bash', 'ndf.bat'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)#, text=True) #, shell = True
 		run = Popen(shell + ' ' + path_bat, shell = True)#, text=True) #
 		
+
 	def run_ndf_linux(self, idf_file):
 		shell = 'gnome-terminal'
 		wine = 'wine'
@@ -268,7 +293,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 		path = idf_file.path_dir
-		file = idf_file.name + '.xml' 
+		# file = idf_file.name + '.xml' 
+		file = idf_file.spc_files[0]
 
 		cwd = idf_file.executable_dir[:-1]
 		cmd = wine + ' ' + cwd + ndf_path + ' ' + file + ' ' + ndf_flags
@@ -328,7 +354,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 				result = msg.exec_()
 				if result == QMessageBox.Open:
-					self.add_tcn_file()	
+					self.add_tcn_file()
+
+
 
 	def add_tcn_file(self):
 		options = QFileDialog.Options()
@@ -341,10 +369,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
-
 	def close_window(self):
 		for i,f in enumerate(self.fields):
-			self.idf_file.set_simulation_group(f.text(), spectra_id=i)
+			self.idf_file.set_simulation_group(f.text(), shared_charge = self.checkSharedCharge.isChecked(), spectra_id=i)
 
 		self.save_run_options(self.idf_file)
 
@@ -352,11 +379,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
-
 if __name__ == "__main__":
 	app = QApplication(argv)
 
-	idf_file = IDF('/home/msequeira/Dropbox/CTN/Radiate/IDF_python/testing/multi_files/combined_4spectra.xml')
+	idf_file = IDF()
 	win = Window(idf_file)
 
 

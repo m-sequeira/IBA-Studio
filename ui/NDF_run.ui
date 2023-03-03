@@ -35,7 +35,7 @@
       <x>10</x>
       <y>10</y>
       <width>271</width>
-      <height>221</height>
+      <height>231</height>
      </rect>
     </property>
     <property name="title">
@@ -53,7 +53,7 @@
           <x>0</x>
           <y>0</y>
           <width>245</width>
-          <height>175</height>
+          <height>156</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
@@ -64,13 +64,23 @@
        </widget>
       </widget>
      </item>
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="checkSharedCharge">
+       <property name="text">
+        <string>Share charge within group</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
    <widget class="QPushButton" name="runButton">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>250</y>
+      <x>530</x>
+      <y>260</y>
       <width>80</width>
       <height>23</height>
      </rect>
@@ -88,7 +98,7 @@
       <x>290</x>
       <y>10</y>
       <width>321</width>
-      <height>221</height>
+      <height>231</height>
      </rect>
     </property>
     <property name="title">
@@ -248,8 +258,8 @@
    <widget class="QPushButton" name="closeButton">
     <property name="geometry">
      <rect>
-      <x>530</x>
-      <y>250</y>
+      <x>440</x>
+      <y>260</y>
       <width>80</width>
       <height>23</height>
      </rect>

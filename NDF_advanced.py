@@ -20,15 +20,16 @@ class NDF_advanced():
 		self.window = window
 		self.idf_file = window.idf_file
 		self.path_advanced = None
-		self.paths_advanced = None
+		self.paths_advanced = []
 		self.ndf_window = run_ndf_from_ori_files(self.window)
+		self.ndf_window.checkSharedCharge.setEnabled(False)
 
 		self.connectSignalsSlots()
 
-		try:
-			mkdir(self.path_dir)
-		except:
-			pass
+		# try:
+		# 	mkdir(self.path_dir_tmp)
+		# except:
+		# 	pass
 
 		# self.figure_result_advanced = plt.figure(figsize=(4,4))
 		# self.canvas_result_advanced = FigureCanvas(self.figure_result_advanced)
@@ -38,7 +39,10 @@ class NDF_advanced():
 
 	def connectSignalsSlots(self):
 		self.window.pushLoad_advanced_inputs.clicked.connect(self.load_advanced_inputs)
+		self.window.pushLoad_tcn.clicked.connect(self.add_tcn_file)
 		self.window.comboBox_Advanced.currentIndexChanged.connect(self.load_advanced_geo_input)
+		self.window.comboBox_Advanced.view().pressed.connect(self.save_state)
+
 		self.window.comboBox_results_Advanced.currentIndexChanged.connect(self.load_results_advanced)
 
 		self.window.pushSave_advanced_inputs.clicked.connect(self.save_advanced)
@@ -51,28 +55,59 @@ class NDF_advanced():
 		self.window.new_windows.append(NDF_Fit_Figure(self))
 		self.window.new_windows[-1].show()
 
+	def save_state(self):
+		current_id = self.window.comboBox_Advanced.currentIndex()
+		text = self.window.advanced_geo_input_field.toPlainText()
+		self.geo_text[current_id] = text
+
 
 	def load_advanced_inputs(self):
 		self.window.save_state()
-		self.path_dir = self.window.path_dir + 'advanced_inputs/'
+
+		# path used just to create the files everytime the generate button is pressed
+		self.path_dir_tmp = self.window.path_dir + 'advanced_inputs/'
+		try:
+			mkdir(self.path_dir_tmp)
+		except:
+			pass
+
 		self.idf_file = self.window.idf_file
 
 		self.window.tabAdvanced.setCurrentIndex(0)
 
+		try:
+			self.filenames_advanced = self.idf_file.export_ndf_inputs(path_dir = self.path_dir_tmp)
+		except Exception as e:
+			self.window.error_window.setText('Check geometry input\n' + str(e))
+			self.window.error_window.exec_()
+			return
+
+		geo_paths = []
+
+		# to create a 1-D list with the reactions inculded
+		for file_group in self.filenames_advanced['geo_files']:
+			for file in file_group:
+				geo_paths.append(file)
+
+		self.filenames_advanced['geo_files'] = geo_paths
+
+		self.geo_text = []
+		for p in self.filenames_advanced['geo_files']:
+			with open(self.path_dir_tmp + p, 'r') as file:
+				self.geo_text.append(file.readlines())
+
 		self.update_combo_id()
 
-		self.paths_advanced = self.idf_file.export_ndf_inputs(path_dir = self.path_dir)
 		self.load_advanced_geo_input()
-		self.load_advanced_str_input(self.paths_advanced['str_files'])
+		self.load_advanced_str_input()
+		self.load_advanced_prf_input()
+		self.load_advanced_spc_input()
 
-		if None not in self.paths_advanced['prf_files']:
-			self.load_advanced_prf_input(self.paths_advanced['prf_files'])
-		self.load_advanced_spc_input(self.paths_advanced['spc_files'])
 
-		# if self.idf_file.get_NDF_run_option('fitmethod')[0] == '6':
 		try:
 			self.load_advanced_tcn_input()
 		except Exception as e:
+			raise e
 			pass
 		# 		msg = QMessageBox()
 		# 		msg.setIcon(QMessageBox.Information)
@@ -92,56 +127,64 @@ class NDF_advanced():
 
 
 	def load_advanced_geo_input(self):
-		current_id = self.window.comboBox_Advanced.currentText().split(':')[0]
-		current_id = int(current_id)
+		current_id = self.window.comboBox_Advanced.currentIndex()
 
-		files_path = self.paths_advanced['geo_files']
-		geo_filename = files_path[current_id]
-
-		with open(self.path_dir + geo_filename, 'r') as file:
-			data = file.readlines()
+		data = self.geo_text[current_id]
 		
 		self.window.advanced_geo_input_field.clear()
 		self.window.advanced_geo_input_field.insertPlainText(''.join(data))
 
-	def load_advanced_str_input(self, files_path):
-		str_filename = files_path[0]
+	def load_advanced_str_input(self, files_path = ''):
+		str_filename = self.filenames_advanced['str_files'][0]
 
-		with open(self.path_dir + str_filename, 'r') as file:
+		with open(self.path_dir_tmp + str_filename, 'r') as file:
 			data = file.readlines()
 		
 		self.window.advanced_str_input_field.clear()
 		self.window.advanced_str_input_field.insertPlainText(''.join(data))
 
-	def load_advanced_prf_input(self, files_path):  
-		prf_filename = files_path[0]
+	def load_advanced_prf_input(self, files_path = ''):  
+		if None in self.filenames_advanced['prf_files']:
+			return
 
-		with open(self.path_dir + prf_filename, 'r') as file:
+		prf_filename = self.filenames_advanced['prf_files'][0]
+
+		with open(self.path_dir_tmp + prf_filename, 'r') as file:
 			data = file.readlines()
 		
 		self.window.advanced_prf_input_field.clear()
 		self.window.advanced_prf_input_field.insertPlainText(''.join(data))
 
-	def load_advanced_spc_input(self, files_path):
-		spc_filename = files_path[0]
+	def load_advanced_spc_input(self, files_path = ''):
+		spc_filename = self.filenames_advanced['spc_files'][0]
 
-		with open(self.path_dir + spc_filename, 'r') as file:
+		with open(self.path_dir_tmp + spc_filename, 'r') as file:
 			data = file.readlines()
-		
+
 		self.window.advanced_spc_input_field.clear()
 		self.window.advanced_spc_input_field.insertPlainText(''.join(data))
 
 	def load_advanced_tcn_input(self):
-		tcn_filename = 'ndf.tcn'
+		tcn_path = self.idf_file.path_dir + 'ndf.tcn'
 
-		with open(self.path_dir + tcn_filename, 'r') as file:
+		with open(tcn_path, 'r') as file:
 			data = file.readlines()
 		
 		self.window.advanced_tcn_input_field.clear()
 		self.window.advanced_tcn_input_field.insertPlainText(''.join(data))
 
 
-	
+	def add_tcn_file(self):
+		options = QFileDialog.Options()
+		fileName, _ = QFileDialog.getOpenFileName(self.window, "Add TCN file", "", "tcn files (*.tcn)", options=options)
+
+		if fileName != '':
+			copyfile(fileName, self.path_dir_tmp + '/ndf.tcn')
+
+		self.load_advanced_tcn_input()
+
+		return fileName
+
 
 	def save_as_advanced(self):
 		# fileName,_ = QFileDialog.getSaveFileName(self.window, 'Save File')
@@ -150,7 +193,7 @@ class NDF_advanced():
 		if fileName != '':
 
 			self.path_advanced = fileName
-			# self.path_dir = '/'.join(self.path_advanced.split('/')[:-1]) + '/'
+			# self.path_dir_tmp = '/'.join(self.path_advanced.split('/')[:-1]) + '/'
 			# self.file = self.path_advanced.split('/')[-1]
 
 			print('Save file...')
@@ -162,18 +205,19 @@ class NDF_advanced():
 
 
 	def save_advanced(self):
-		if self.paths_advanced is None:
+		self.save_state()
+
+		if self.filenames_advanced is None:
 			return
 
 		if self.path_advanced is None:
 			self.save_as_advanced()
 			return
 
-
 		pairs = {
-			self.paths_advanced['str_files'][0] : self.window.advanced_str_input_field,
-			self.paths_advanced['prf_files'][0] : self.window.advanced_prf_input_field,
-			self.paths_advanced['spc_files'][0] : self.window.advanced_spc_input_field,
+			self.filenames_advanced['str_files'][0] : self.window.advanced_str_input_field,
+			self.filenames_advanced['prf_files'][0] : self.window.advanced_prf_input_field,
+			self.filenames_advanced['spc_files'][0] : self.window.advanced_spc_input_field,
 			'ndf.tcn': self.window.advanced_tcn_input_field
 		}
 
@@ -187,28 +231,35 @@ class NDF_advanced():
 
 				print(self.path_advanced + '/' + k, 'saved')
 
-		for geo in self.paths_advanced['geo_files']:
-			text = self.window.advanced_geo_input_field.toPlainText()
-			with open(self.path_advanced + '/' + geo, 'w') as file:
-				file.write(text)
 
-			print(self.path_advanced + '/' + geo, 'saved')
+		for geo_path, geo_text in zip(self.filenames_advanced['geo_files'], self.geo_text):
+			with open(self.path_advanced + '/' + geo_path, 'w') as file:
+				file.write(''.join(geo_text))
+
+			print(self.path_advanced + '/' + geo_path, 'saved')
 
 
-		for dat in self.paths_advanced['dataxy_files']:
-			copyfile(self.path_dir + dat, self.path_advanced + '/' + dat)
+		for dat in self.filenames_advanced['dataxy_files']:
+			try:
+				copyfile(self.path_dir_tmp + dat, self.path_advanced + '/' + dat)
 
-			print(self.path_advanced + '/' + dat, 'saved')
+				print(self.path_advanced + '/' + dat, 'saved')
+			except:
+				pass
 
 		self.fit_ids = []
 		sample_count = 0
 		geo_count = 0
 		spc_text = self.window.advanced_spc_input_field.toPlainText().strip().split('\n')
 		for line in spc_text:
-			n_entries = len(line.split())
+			entries = line.split()
+			n_entries = len(entries)
 			if n_entries == 4:
-				sample_count += 1
-				geo_count = 1
+				if entries[-1][-1] in [']', ')', '}']:
+					geo_count += 1
+				else:
+					sample_count += 1
+					geo_count = 1
 			elif n_entries == 3:
 				geo_count += 1
 
@@ -222,12 +273,15 @@ class NDF_advanced():
 
 	def open_folder(self):
 		OSname = platform()
-		if 'Linux' in OSname:
-			Popen(["xdg-open", self.path_advanced])			
-		elif 'Windows' in OSname:
-			print('Nothing')
-			# startfile(self.path_advanced)
-
+		try:
+			if 'Linux' in OSname:
+				Popen(["xdg-open", self.path_advanced])			
+			elif 'Windows' in OSname:
+				print('Nothing')
+				# startfile(self.path_advanced)
+		except Exception as e:
+			self.window.error_window.setText('Error: Try saving the files first.\n\n - ' + str(e))
+			self.window.error_window.exec_()
 
 
 	def load_results_advanced(self):
@@ -238,7 +292,7 @@ class NDF_advanced():
 			current_id = int(current_id)
 			fit_id = self.fit_ids[current_id]
 
-			file = self.paths_advanced['spc_files'][0]
+			file = self.filenames_advanced['spc_files'][0]
 
 			# name[:3]gXY x is the sample and Y is the spectra
 			pairs = {
@@ -278,7 +332,7 @@ class NDF_advanced():
 
 
 	def set_spectra_fit_result_advanced(self):
-		file = self.paths_advanced['spc_files'][0]
+		file = self.filenames_advanced['spc_files'][0]
 		current_id = self.window.comboBox_results_Advanced.currentText().split(':')[0]
 		current_id = int(current_id)
 		fit_id = self.fit_ids[current_id]
@@ -311,24 +365,38 @@ class NDF_advanced():
 	def update_combo_id(self):
 			name_list = []
 
+			c = 0
 			for i in range(self.window.nspectra):
 				name = self.idf_file.get_spectrum_file_name(spectra_id=i)
+				reactions = self.idf_file.get_reactions(spectra_id = i)
+
 				if name is None:
 					name = 'Spectrum %i' %(i+1)
 				else:
-					name = '%i: %s' %(i, name.split('.')[0])
-				
-				name_list.append(name)
+					# name += '\t %i: %s' %(i, name.split('.')[0])
+					for r in reactions:
+						name = '%i: %s' %(i, self.filenames_advanced['geo_files'][c])
+						name_list.append(name + ' - ' + r['code'])
+						c += 1
+					c -= 1
+				c += 1
 
 			self.window.comboBox_Advanced.blockSignals(True)
 			self.window.comboBox_Advanced.clear()
 			self.window.comboBox_Advanced.addItems(name_list)
+			self.window.comboBox_Advanced.setCurrentIndex(0)
 			self.window.comboBox_Advanced.blockSignals(False)
 
 			self.window.comboBox_results_Advanced.blockSignals(True)
 			self.window.comboBox_results_Advanced.clear()
 			self.window.comboBox_results_Advanced.addItems(name_list)
+			self.window.comboBox_results_Advanced.setCurrentIndex(0)
 			self.window.comboBox_results_Advanced.blockSignals(False)
+
+			# self.window.comboReactions_Advanced.blockSignals(True)
+			# self.window.comboReactions_Advanced.clear()
+			# self.window.comboReactions_Advanced.addItems(reaction_list)
+			# self.window.comboReactions_Advanced.blockSignals(False)
 
 
 	def run_ndf(self):
@@ -390,7 +458,8 @@ class run_ndf_from_ori_files(NDF_Window):
 		self.flags = []						
 		for k,o in options_combo.items():
 			self.flags.append(o.currentText().split(' - ')[0])
-		
+
+				
 
 
 		OSname = platform()
@@ -398,6 +467,9 @@ class run_ndf_from_ori_files(NDF_Window):
 			self.run_ndf_linux()
 		elif 'Windows' in OSname:
 			self.run_ndf_windows()
+
+
+		self.close()
 
 	def run_ndf_linux(self):
 		shell = 'gnome-terminal'
@@ -411,7 +483,7 @@ class run_ndf_from_ori_files(NDF_Window):
 
 
 		path = self.advanced_tab.path_advanced
-		file = self.advanced_tab.paths_advanced['spc_files'][0] 
+		file = self.advanced_tab.filenames_advanced['spc_files'][0] 
 		
 		cwd = osjoin(dirname(__file__), 'pyIBA/pyIBA')
 		cmd = wine + ' ' + cwd + ndf_path + ' ' + file + ' ' + ndf_flags
@@ -446,7 +518,7 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 		# self.simulation_id = main_window.simulation_id
 		# self.debug = main_window.debug
 		# self.settings = main_window.settings
-		self.paths_advanced = main_window.paths_advanced
+		self.filenames_advanced = main_window.filenames_advanced
 		self.path_advanced = main_window.path_advanced
 		self.window = main_window.window
 		self.fit_ids = main_window.fit_ids
@@ -460,7 +532,7 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 		self.spectra_result_plot.addWidget(self.toolbar)
 
 
-		file = self.paths_advanced['spc_files'][0]
+		file = self.filenames_advanced['spc_files'][0]
 		current_id = self.window.comboBox_results_Advanced.currentText().split(':')[0]
 		current_id = int(current_id)
 		fit_id = self.fit_ids[current_id]
