@@ -1193,7 +1193,7 @@ class Ui_MainWindow(object):
         self.label_geo_geometry.setBuddy(self.geo_angle_in)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         self.tabResults.setCurrentIndex(0)
         self.tabAdvanced.setCurrentIndex(0)
         self.elements_nelements.valueChanged['int'].connect(self.elements_nelements.setValue) # type: ignore

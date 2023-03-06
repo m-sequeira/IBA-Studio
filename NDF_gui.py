@@ -284,8 +284,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.setWindowTitle('IDF Viewer: New file')
 		self.reset_window()
 		self.update_runList()
-		
-
 
 
 	def connectSignalsSlots(self):
@@ -680,7 +678,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			try:
 				pickle_filename = self.path[:-3] + 'idv'
 				self.project = load_project(pickle_filename)
-				# self.idf_file = self.project.sim_version_history[-1]
 				self.idf_file = IDF(self.path)
 
 				self.reload_window()                
@@ -794,22 +791,16 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
-
-
 	def run_ndf(self):
-		if self.debug: print('NDF_gui, run_ndf - main window button clicked')
 		if self.idf_file.file_name == '':
 			self.save()
+			if self.idf_file.file_name == '':
+				return
 		
-		if self.idf_file.file_name == '':
-			return
-				
-
-		# else:
-		# 	self.save_state()
-
+		# update the idf in the ndf_run_window						
 		self.ndf_window.update_idf_file_version()
 
+		# open the window
 		if ~self.ndf_window.isVisible():
 			self.ndf_window.show()
 
@@ -879,10 +870,9 @@ class Window(QMainWindow, Ui_MainWindow):
 		if self.ndf_window.isVisible():
 			self.ndf_window.close()
 		
-		self.idf_file = IDF(self.path)
-		self.open(fileName = self.idf_file.file_path)
-
+		# the above will initiate the change_idf in the row "in xml file"
 		self.runList.setCurrentRow(self.runList.count()-1)
+
 		
 	def reload_window(self):
 		if self.debug: print('NDF_gui, reload_window - reset_window begins')
@@ -1392,18 +1382,17 @@ class Window(QMainWindow, Ui_MainWindow):
 		else:
 			if self.debug: print('NDF_gui, change_idf_version - deep copy made of i:', index_run)
 
+			# self.idf_file = deepcopy(self.project.sim_version_history[-(index_run + 1)])
+			self.idf_file = self.project.get_idf_version(index_run)
+
 			if '[R]' in text_run:
 				self.load_results(index_run = index_run)
-			else:
-				self.idf_file = deepcopy(self.project.sim_version_history[-(index_run + 1)])
 		
 
 		if self.debug: print('NDF_gui, change_idf_version - ',  self.idf_file.path_dir)
 
 		spectra_id_old = self.spectra_id
-		if self.debug: print('NDF_gui, change_idf_version - reload window')
 		self.reload_window()
-		if self.debug: print('NDF_gui, change_idf_version - change spectra_id')
 		self.spectra_id = spectra_id_old
 
 		if self.ndf_window.isVisible():

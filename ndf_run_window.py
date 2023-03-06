@@ -37,7 +37,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.main_window = main_window
 		self.project = main_window.project
-		self.idf_file = main_window.idf_file
+		# self.idf_file_h = main_window.idf_file
 
 		self.fields = []
 
@@ -74,7 +74,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.run_ndf()
 
 	def update_idf_file_version(self):
-		self.idf_file = self.main_window.idf_file
+		# self.idf_file_h = self.main_window.idf_file
 		self.project = self.main_window.project
 		self.initialize()
 
@@ -93,20 +93,14 @@ class Window(QMainWindow, Ui_MainWindow):
 			l = self.formLayout.labelForField(f)
 			l.deleteLater()
 
-		# self.reset_sim_group_form()
-		# for l, f in zip(self.labels, self.fields):
-		# 	l.deleteLater()
-		# 	f.deleteLater()
-		# for i in range(self.formLayout.rowCount()):
-		# 	self.formLayout.removeRow(i)
 
-
-		names = self.idf_file.get_all_spectra_filenames()
+		## populate simulation group box
+		names = self.main_window.idf_file.get_all_spectra_filenames()
 		
 		self.fields = []
-		nspectra = self.idf_file.get_number_of_spectra()
+		nspectra = self.main_window.idf_file.get_number_of_spectra()
 		for i in range(nspectra):
-			sim_group = self.idf_file.get_simulation_group(spectra_id = i)
+			sim_group = self.main_window.idf_file.get_simulation_group(spectra_id = i)
 			field = QLineEdit(str(sim_group[0]))
 
 			name = names[i]
@@ -157,7 +151,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			}
 								
 		for k,o in options_combo.items():			
-			_, model = self.idf_file.get_NDF_run_option(k)
+			_, model = self.main_window.idf_file.get_NDF_run_option(k)
 
 			if model is None:
 				model = self.default_flags[k]
@@ -180,43 +174,33 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# create folder and copy the files from previous simulation to there (to avoid double scattering calculation etc)
 		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M:%S') + '_idv'
-		path_new_idf = new_folder + '/' + self.idf_file.name + '.xml'
+		path_new_idf = new_folder + '/' + self.main_window.idf_file.name + '.xml'
 
 		try:
 			if len(self.project.sim_version_history) > 1:
-				# prev_folder = self.idf_file.path_dir
-				prev_folder = self.project.sim_version_history[-1].path_dir
-				
+				prev_folder = self.project.sim_version_history[-1].path_dir				
 				copytree(prev_folder, new_folder)
 			else:
 				mkdir(new_folder)
-
 		except Exception as e:
 			# if self.debug: raise e
 			mkdir(new_folder)
 
-		## Save everything
-		self.idf_file = self.main_window.idf_file
+		## Save any changes made in the main window while ndf_run_window is open
 		self.main_window.save_state()
+		
 		for i,f in enumerate(self.fields):
-			self.idf_file.set_simulation_group(f.text(), shared_charge = self.checkSharedCharge.isChecked(), spectra_id=i)			
+			self.main_window.idf_file.set_simulation_group(f.text(), shared_charge = self.checkSharedCharge.isChecked(), spectra_id=i)			
 
-		self.save_run_options(self.idf_file)
-		
-		# a copy of self.idf_file should be created before saving to avoid changing the origianl path_dir 
-		idf_file_run = deepcopy(self.idf_file)
-		idf_file_run.save_idf(path_new_idf)		
-		self.project.sim_version_history.append(idf_file_run)
+		self.save_run_options(self.main_window.idf_file)
 
-		if self.debug: 
-			print('ndf_run_windoww, run_ndf - at end nversions:', len(self.project.sim_version_history))
-			for p in self.project.sim_version_history:
-				print('\t', p.path_dir.split('/')[-2])
-				print('\t', p.get_geo_parameters()['beam_energy'])
 		
-		
+		# a copy of self.main_window.idf_file should be created before saving to avoid changing the origianl path_dir 
+		idf_file_run = deepcopy(self.main_window.idf_file)
+		idf_file_run.save_idf(path_new_idf)
 
-		# idf_file_run.save_idf(new_folder + '/' + self.idf_file.name + '.xml')
+		# project.append makes a deepcopy of the idf_file		
+		self.project.append(idf_file_run)		
 		self.project.save()
 		
 		## decompress the IDF file into NDF files here instead of sentind the xml file to the NDF
@@ -233,7 +217,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.run_ndf_linux(idf_file_run)
 		elif 'Windows' in OSname:
 			self.run_ndf_windows(idf_file_run)
-
 
 		self.main_window.update_runList()
 		self.main_window.runList.setCurrentRow(0)
@@ -336,7 +319,7 @@ class Window(QMainWindow, Ui_MainWindow):
 					
 
 	def tcn_warning(self):
-		file = self.idf_file.path_dir + 'ndf.tcn'
+		file = self.main_window.idf_file.path_dir + 'ndf.tcn'
 		current_option = str(self.comboRun_speed.currentText())
 
 		if 'TCN' in current_option:
@@ -363,7 +346,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		fileName, _ = QFileDialog.getOpenFileName(self, "Add TCN file", "", "tcn files (*.tcn)", options=options)
 
 		if fileName != '':
-			copyfile(fileName, self.idf_file.path_dir + 'ndf.tcn')
+			copyfile(fileName, self.main_window.idf_file.path_dir + 'ndf.tcn')
 
 		return fileName
 
@@ -371,9 +354,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def close_window(self):
 		for i,f in enumerate(self.fields):
-			self.idf_file.set_simulation_group(f.text(), shared_charge = self.checkSharedCharge.isChecked(), spectra_id=i)
+			self.main_window.idf_file.set_simulation_group(f.text(), shared_charge = self.checkSharedCharge.isChecked(), spectra_id=i)
 
-		self.save_run_options(self.idf_file)
+		self.save_run_options(self.main_window.idf_file)
 
 		self.close()
 

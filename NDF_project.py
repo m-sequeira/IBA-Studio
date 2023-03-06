@@ -7,14 +7,22 @@ from copy import deepcopy
 class project():
 	def __init__(self, idf_file):
 		self.idf_file = idf_file
-		self.sim_version_history = []#[self.idf_file]
+		self.sim_version_history = []
 
 		self.path_dir = self.idf_file.path_dir
 		self.name = self.idf_file.name
 		self.file_path = self.path_dir + self.name + '.idv'
 
-
 		self.debug = False
+
+	
+	def append(self, new_idf):
+		self.sim_version_history.append(deepcopy(new_idf))
+		return self.sim_version_history[-1]
+
+	def get_idf_version(self, index):
+		return deepcopy(self.sim_version_history[-(index + 1)])
+
 
 	def reload_idf_file(self, index = None):
 		try:
@@ -27,7 +35,10 @@ class project():
 			else:
 				path = self.sim_version_history[index].file_path
 				self.sim_version_history[index] = IDF(path)
-				return self.sim_version_history[index]
+
+				# use get_idf_version to keep track of the list accesses
+				return self.get_idf_version(-(index + 1))
+				# return deepcopy(self.sim_version_history[index])
 		except Exception as e:
 			print(e)
 
