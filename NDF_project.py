@@ -64,8 +64,6 @@ class project():
 
 		prev_names.append('In xml file')
 
-
-
 		return prev_names
 
 	def check_simulations_running(self):

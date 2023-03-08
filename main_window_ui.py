@@ -957,7 +957,7 @@ class Ui_MainWindow(object):
         self.label_14.setGeometry(QtCore.QRect(10, 350, 59, 15))
         self.label_14.setObjectName("label_14")
         self.pushLoad_results = QtWidgets.QPushButton(self.tab_3)
-        self.pushLoad_results.setEnabled(False)
+        self.pushLoad_results.setEnabled(True)
         self.pushLoad_results.setGeometry(QtCore.QRect(990, 647, 100, 23))
         self.pushLoad_results.setObjectName("pushLoad_results")
         self.groupBox_10 = QtWidgets.QGroupBox(self.tab_3)

@@ -8,9 +8,7 @@ from shutil import copyfile, copytree
 from datetime import datetime
 from copy import deepcopy
 from time import sleep
-# from pickle import dump, load
-
-
+from glob import glob 
 
 from PyQt5.QtWidgets import (
 	QApplication, QLabel, QLineEdit, QFormLayout,QShortcut,
@@ -20,7 +18,7 @@ from PyQt5.QtWidgets import (
 	QCheckBox, QSpacerItem
 	)
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, QObject, QThread, pyqtSignal
 
 syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
@@ -49,6 +47,24 @@ class Window(QMainWindow, Ui_MainWindow):
 					'smooth': '0 - Don\'t smooth data',
 					'normalisation': '1 - Normalise profile'
 		}
+
+
+		# Step 2: Create a QThread object
+		self.thread = QThread()
+		# Step 3: Create a worker object
+		self.worker = load_results_worker()
+		
+		# Step 4: Move worker to the thread
+		self.worker.moveToThread(self.thread)
+		# Step 5: Connect signals and slots
+		self.thread.started.connect(self.worker.run)
+		# self.worker.finished.connect(self.worker.deleteLater)
+		# self.thread.finished.connect(self.thread.deleteLater)
+		# self.worker.progress.connect(self.main_window.update_runList)
+		self.worker.progress.connect(lambda x: self.update_load_loop(x))
+		self.worker.finished.connect(self.finished_load_loop)
+		self.worker.finished.connect(self.thread.quit)
+
 
 		self.debug = self.main_window.debug
 
@@ -177,14 +193,23 @@ class Window(QMainWindow, Ui_MainWindow):
 		path_new_idf = new_folder + '/' + self.main_window.idf_file.name + '.xml'
 
 		try:
+			mkdir(new_folder)
+
 			if len(self.project.sim_version_history) > 1:
 				prev_folder = self.project.sim_version_history[-1].path_dir				
-				copytree(prev_folder, new_folder)
-			else:
-				mkdir(new_folder)
+				# copytree(prev_folder, new_folder)
+				file_codes_copy = [self.project.name[:3] + 'u*', # pileup
+									self.project.name[:3] + 'ds*'] # double scattering
+
+				for code in file_codes_copy:
+					files = glob(prev_folder + code)
+					for file in files:
+						copyfile(file, new_folder + '/' + file.split('/')[-1])
 		except Exception as e:
 			# if self.debug: raise e
-			mkdir(new_folder)
+			pass
+			# mkdir(new_folder)
+
 
 		## Save any changes made in the main window while ndf_run_window is open
 		self.main_window.save_state()
@@ -218,11 +243,18 @@ class Window(QMainWindow, Ui_MainWindow):
 		elif 'Windows' in OSname:
 			self.run_ndf_windows(idf_file_run)
 
+		
+		self.worker.main_window = self.main_window
+		# self.worker = QThread()
+
+		# Step 6: Start the thread
+		if not self.thread.isRunning():
+			print('Loading thread started')
+			self.thread.start()
+
 		self.main_window.update_runList()
 		self.main_window.runList.setCurrentRow(0)
 
-		# dump(self.project, open(self.project.path_dir + self.project.name + '.idv', 'wb'))
-		
 
 	def run_ndf_windows(self, idf_file):
 		shell = 'start cmd.exe /c'
@@ -302,7 +334,33 @@ class Window(QMainWindow, Ui_MainWindow):
 			sleep(1)
 
 
-	
+	def update_load_loop(self, run_state):
+		index_runList = self.main_window.runList.currentRow()
+		index_run = run_state[0]
+
+		# don't understand why but need to loaded one last time here after worker finish this
+		# run...
+		if run_state[1] == 'F':
+			self.main_window.load_results(index_run = index_run)
+
+
+		if index_run == index_runList:
+			self.main_window.idf_file = self.main_window.project.get_idf_version(index_run)
+			self.main_window.set_results_box()
+			# as to update for the case of multi simulations running
+			self.main_window.update_runList()
+
+
+
+
+
+	def finished_load_loop(self):
+		self.main_window.update_runList()
+
+		# self.pushLoad_results.setEnabled(False)
+		if not self.main_window.settings['Actions'].getboolean('keep_NDF_files'):			
+			self.main_window.clear_files()
+
 	def wait_NDF(self):
 		with open('run_status.res', 'r') as file:
 			status = True
@@ -359,6 +417,61 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.save_run_options(self.main_window.idf_file)
 
 		self.close()
+
+
+
+class load_results_worker(QObject):
+	finished = pyqtSignal()
+	progress = pyqtSignal(list)
+
+	def run(self):
+		self.load_results_loop()
+
+	def load_results_loop(self):
+		is_running = True
+		# last_loop = False
+		old_run_states = []
+
+		while is_running:	
+			run_states = self.main_window.project.check_simulations_running()
+			
+
+
+			if len(old_run_states) != len(run_states):
+				old_run_states.insert(0, True)
+
+			index_run = 0
+			try:
+				for old, state in zip(old_run_states, run_states):
+					if old != state:
+						self.main_window.load_results(index_run = index_run)
+						self.progress.emit([index_run, 'F'])
+
+
+					if state:
+						self.main_window.load_results(index_run = index_run)
+						self.progress.emit([index_run, 'R'])
+
+
+					index_run += 1
+
+			except Exception as e:
+				print(e)
+				sleep(1)
+				pass
+
+
+			if True not in run_states:
+				break
+
+			old_run_states[:] = run_states[:]
+
+			sleep(3)
+		
+		self.main_window.project.save()
+		self.finished.emit()
+
+
 
 
 

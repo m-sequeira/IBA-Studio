@@ -107,7 +107,7 @@ class NDF_advanced():
 		try:
 			self.load_advanced_tcn_input()
 		except Exception as e:
-			raise e
+			# raise e
 			pass
 		# 		msg = QMessageBox()
 		# 		msg.setIcon(QMessageBox.Information)

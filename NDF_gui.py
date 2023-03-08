@@ -597,18 +597,20 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 	def update_runList(self):
+		old_index = self.runList.currentRow()
 		prev_names = self.project.get_version_names()
 		
 		self.runList.blockSignals(True)
 		self.runList.clear()
 		self.runList.addItems(prev_names)
+		self.runList.setCurrentRow(old_index)
 		self.runList.blockSignals(False)
 
-		run_states = self.project.check_simulations_running()
-		if True not in run_states:
-			self.pushLoad_results.setEnabled(False)
-		else:
-			self.pushLoad_results.setEnabled(True)
+		# run_states = self.project.check_simulations_running()
+		# if True not in run_states:
+		# 	self.pushLoad_results.setEnabled(False)
+		# else:
+		# 	self.pushLoad_results.setEnabled(True)
 		
 
 	
@@ -696,6 +698,8 @@ class Window(QMainWindow, Ui_MainWindow):
 					self.project = project(self.idf_file)
 					self.reload_window()
 					self.update_runList()
+					self.runList.setCurrentRow(self.runList.count()-1)
+
 				except Exception as e:
 					msg = QMessageBox()
 					msg.setIcon(QMessageBox.Information)
@@ -870,6 +874,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		if self.ndf_window.isVisible():
 			self.ndf_window.close()
 		
+		self.open(fileName = self.path)
+
 		# the above will initiate the change_idf in the row "in xml file"
 		self.runList.setCurrentRow(self.runList.count()-1)
 
@@ -1317,53 +1323,49 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.fitElementLayout.itemAt(i).widget().setChecked(fit_checked[i])
 
 
+
 	def load_results(self, index_run = None):
 		if self.debug: print('NDF_gui, load_results - begins')
-		self.update_runList()		
-
+		# self.update_runList()		
+		if index_run is None:
+				index_run = 0
 		try:
 			# need to reload the file from the disk because IDF2NDF (of NDF) changes 
 			# the file (adds the file ids used for output)
-			if index_run is None:
-				index_run = 0
+			idf_file  = self.project.reload_idf_file(-(index_run + 1))
 
-			self.idf_file  = self.project.reload_idf_file(-(index_run + 1))
+			# self.runList.blockSignals(True)
+			# self.runList.setCurrentRow(index_run)
+			# self.runList.blockSignals(False)
 
-			self.runList.blockSignals(True)
-			self.runList.setCurrentRow(index_run)
-			self.runList.blockSignals(False)
-
-			for i in range(self.idf_file.get_number_of_spectra()):
-				self.idf_file.set_spectra_result(spectra_id = i)
-				self.idf_file.set_geometry_result(spectra_id = i)
-				self.idf_file.set_elements_result(spectra_id = i)
-				self.idf_file.set_profile_result(spectra_id  = i)
+			for i in range(idf_file.get_number_of_spectra()):
+				idf_file.set_spectra_result(spectra_id = i)
+				idf_file.set_geometry_result(spectra_id = i)
+				idf_file.set_elements_result(spectra_id = i)
+				idf_file.set_profile_result(spectra_id  = i)
 			
-			self.set_results_box()
+			# self.set_results_box()
 
-			self.idf_file.save_idf(self.idf_file.file_path)
+			idf_file.save_idf(idf_file.file_path)
 			self.project.save()
 
-			run_states = self.project.check_simulations_running()
-			if True not in run_states:
-				self.pushLoad_results.setEnabled(False)
-				if not self.settings['Actions'].getboolean('keep_NDF_files'):			
-					self.clear_files()
+			
 
 
 		except Exception as e:
 			if self.debug: raise e
-			print('Result files not found')
-			msg = QMessageBox()
-			msg.setIcon(QMessageBox.Information)
+			pass
+			# print('Result files not found')
+			# msg = QMessageBox()
+			# msg.setIcon(QMessageBox.Information)
 
-			msg.setText("Result files not found")
-			# msg.setInformativeText("This is additional information")
-			msg.setWindowTitle("Error")
-			# msg.setDetailedText("The details are as follows:")
-			msg.setStandardButtons(QMessageBox.Ok)
-			# buttonAdd = msg.button(QMessageBox.Open)
-			result = msg.exec_()
+			# msg.setText("Result files not found")
+			# # msg.setInformativeText("This is additional information")
+			# msg.setWindowTitle("Error")
+			# # msg.setDetailedText("The details are as follows:")
+			# msg.setStandardButtons(QMessageBox.Ok)
+			# # buttonAdd = msg.button(QMessageBox.Open)
+			# result = msg.exec_()
 		
 
 	def change_idf_version(self):
@@ -1382,11 +1384,10 @@ class Window(QMainWindow, Ui_MainWindow):
 		else:
 			if self.debug: print('NDF_gui, change_idf_version - deep copy made of i:', index_run)
 
-			# self.idf_file = deepcopy(self.project.sim_version_history[-(index_run + 1)])
 			self.idf_file = self.project.get_idf_version(index_run)
 
-			if '[R]' in text_run:
-				self.load_results(index_run = index_run)
+			# if '[R]' in text_run:
+			# 	self.load_results(index_run = index_run)
 		
 
 		if self.debug: print('NDF_gui, change_idf_version - ',  self.idf_file.path_dir)
@@ -1428,7 +1429,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.ax_result = self.figure_result.add_subplot(111)
 
-		if 'PIXE' == self.idf_file.get_technique(spectra_id=self.spectra_id):
+		technique = self.idf_file.get_technique(spectra_id=self.spectra_id)
+		if 'PIXE' == technique:
 			self.ax_result.stem(data_x_given, data_y_given, basefmt = ' ', label = 'Exp.')
 			self.ax_result.scatter(data_x_fit, data_y_fit, marker = '_', s = 250, color = 'r', label = 'Fit')
 			self.ax_result.set_xlabel('Element/Line')
@@ -1437,7 +1439,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.ax_result.set_yscale('log')
 
 
-		elif 'SIMS' == self.idf_file.get_technique(spectra_id=self.spectra_id):
+		elif 'SIMS' == technique:
 			for particle, profile in data_y_given.items():
 				self.ax_result.plot(data_x_given, profile, label = r'%s'%latex_atom(particle))
 			for particle, profile in data_y_fit.items():
@@ -1476,8 +1478,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 				if i == 0:			
 					self.ax_result.plot(m*nparray(data_x_given[cut_channel_min:cut_channel_max]) + b, data_y_given[cut_channel_min:cut_channel_max], 'o', ms = 2, label = 'Exp.')
-
-				self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_fit[cut_channel_min:cut_channel_max], label = 'Fit ' + reactions[i]['code'])
+				if len(data_y_fit) > 1:
+					self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_fit[cut_channel_min:cut_channel_max], label = 'Fit ' + reactions[i]['code'])
 
 				# this condition is separeted from the one above so that the plot looks more organized
 				# if i == nreactions - 1 and i != 0:
@@ -1492,7 +1494,8 @@ class Window(QMainWindow, Ui_MainWindow):
 								continue
 							self.ax_result.plot(m*nparray(data_ele['x'][cut_channel_min:cut_channel_max]) + b, y[cut_channel_min:cut_channel_max], '--', label = name + ' ' + reactions[i]['code'])
 					except Exception as e:
-						if self.debug: raise e							
+						# if self.debug: raise e
+													
 						pass
 
 			if self.settings['Appearance'].getboolean('energy_scale_keV'):
@@ -1509,6 +1512,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.figure_result.tight_layout()
 
 		self.canvas_result.draw()
+
+
 
 	def set_geometry_fit_result_tab(self):
 		pairs = {
