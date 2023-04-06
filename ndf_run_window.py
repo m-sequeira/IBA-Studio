@@ -466,7 +466,7 @@ class load_results_worker(QObject):
 
 			old_run_states[:] = run_states[:]
 
-			sleep(3)
+			sleep(1)
 		
 		self.main_window.project.save()
 		self.finished.emit()

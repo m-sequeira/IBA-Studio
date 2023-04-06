@@ -225,6 +225,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.nsims = 0
 		self._simulation_id = 0
 
+		self.edit_widgets_lines = [w for w in QApplication.allWidgets() if isinstance(w, (QLineEdit, QPlainTextEdit))]
+		self.edit_widgets_tables = [w for w in QApplication.allWidgets() if isinstance(w, QTableWidget)]
+		self.edit_widgets_checkBoxes = [w for w in QApplication.allWidgets() if isinstance(w, QCheckBox)]
+		self.fitElementArea.setWidgetResizable(True)
+		
 		# resize the element table columns with
 		horizontalHeader = self.elements_table.horizontalHeader()
 		# resize the first column to 100 pixels
@@ -245,6 +250,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.spectra_plot.addWidget(self.canvas_exp_spectra)
 		self.canvas_exp_spectra.mpl_connect('button_press_event', self.onclick_spectrum)
 		self.canvas_exp_spectra.setToolTip('Click to enlarge')
+		self.figure_exp_spectra.tight_layout()
 
 		self.figure_result = plt.figure(figsize=(8.5,2.5))
 		self.canvas_result = FigureCanvas(self.figure_result)
@@ -268,8 +274,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.new()
 
-		self.open()
-
 		self.advanced_tab = NDF_advanced(self)
 
 		
@@ -281,14 +285,15 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.path_dir = None
 		self.file = None
 
-		self.setWindowTitle('IDF Viewer: New file')
-		self.reset_window()
+		self.setWindowTitle('IBA Viewer: New file')
+		self.reload_window()
 		self.update_runList()
-
+		
 
 	def connectSignalsSlots(self):
 		# file menu
 		self.actionNew.triggered.connect(self.new)
+		# self.actionNew_Window.triggered.connect(self.new_window)
 		self.actionOpen.triggered.connect(self.open)
 		self.actionSave.triggered.connect(self.save)
 		self.actionSave_As.triggered.connect(self.save_as)
@@ -394,9 +399,6 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.geo_calibration_m.setText(fileName)
 			self.idf_file.set_energy_calibration_file(filePath, spectra_id=self.spectra_id)
 
-
-
-
 	def save_state(self):
 		try:
 			self.save_elements_box()
@@ -410,7 +412,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		except Exception as e:
 			if self.debug: raise e
 			print('State not saved')
-
 
 	def onchange_spectrum_combo(self):
 		curr_index = self.comboSpectrum_id.currentIndex()
@@ -655,6 +656,12 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.geo_projectile_out.setText(reactions[0]['exitparticle'])
 
 
+	# def new_window(self):
+		# new_window = Window()
+		# new_window.show()
+		# self.new_windows.append(new_window)
+
+
 
 	def open(self, fileName = ''):
 		if fileName == False:
@@ -682,23 +689,24 @@ class Window(QMainWindow, Ui_MainWindow):
 				self.project = load_project(pickle_filename)
 				self.idf_file = IDF(self.path)
 
+				# the reload_window will run with the run
 				self.reload_window()                
-
-				# self.runList.blockSignals(True)
 				self.update_runList()
+				self.runList.blockSignals(True)
 				self.runList.setCurrentRow(self.runList.count()-1)
-				# self.runList.blockSignals(False)
+				self.runList.blockSignals(False)
 
 				print('Pickle Loaded')
 
 			except Exception as e:
-				# raise e
 				try:
 					self.idf_file = IDF(self.path)
 					self.project = project(self.idf_file)
 					self.reload_window()
 					self.update_runList()
+					self.runList.blockSignals(True)					
 					self.runList.setCurrentRow(self.runList.count()-1)
+					self.runList.blockSignals(True)
 
 				except Exception as e:
 					msg = QMessageBox()
@@ -789,7 +797,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	
 	def about_window(self):
-		# about = About_Window()
 		self.about_window.show()
 
 
@@ -875,7 +882,7 @@ class Window(QMainWindow, Ui_MainWindow):
 			self.ndf_window.close()
 		
 		self.open(fileName = self.path)
-
+		self.reload_window()
 		# the above will initiate the change_idf in the row "in xml file"
 		self.runList.setCurrentRow(self.runList.count()-1)
 
@@ -886,7 +893,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		if self.debug: print('NDF_gui, reload_window - reloading begins')
 		if self.path != None:
-			self.setWindowTitle('IDF Viewer: ' + self.path.split('/')[-1])
+			self.setWindowTitle('IBA Studio: ' + self.path.split('/')[-1])
 
 			self.notes_user.setText(self.idf_file.user)
 			self.notes_note.insertPlainText('\n\n'.join(self.idf_file.description))
@@ -927,47 +934,52 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def reset_window(self):
 		if self.debug: print('NDF_gui, reset_window - begins')
-		# self.inicialize()
-		for widget in QApplication.allWidgets():
-			for ele2reset in [QLineEdit, QPlainTextEdit]:
-				if isinstance(widget, ele2reset):
-					widget.clear()
-					break
-			# if isinstance(widget, QComboBox):
-				# widget.setCurrentIndex(-1)
-			if isinstance(widget, QTableWidget):
-				# print(widget)
-				widget.clearContents()
+		
 
-			elif isinstance(widget, QCheckBox):
-				widget.setChecked(False)
+		for widget in self.edit_widgets_lines:
+			widget.clear()
 
-			# print('aa', widget, isinstance(widget, QWidget))
-			# if not isinstance(widget, QWidget):
-			#   print('bb', widget)
-			#   widget.clear()
+		for widget in self.edit_widgets_tables:
+			widget.clearContents()
+
+		for widget in self.edit_widgets_checkBoxes:
+			widget.setChecked(False)
+
+		# for widget in QApplication.allWidgets():
+			# for ele2reset in [QLineEdit, QPlainTextEdit]:
+			# 	if isinstance(widget, ele2reset):
+			# 		widget.clear()
+			# 		break
+			
+			# if isinstance(widget, QTableWidget):
+			# 	widget.clearContents()
+
+			# elif isinstance(widget, QCheckBox):
+			# 	widget.setChecked(False)
+
+			
 
 
-			widget.setStyleSheet('QLineEdit' +
-								"{"
-								"}")
+			# widget.setStyleSheet('QLineEdit' +
+			# 					"{"
+			# 					"}")
 
 		while self.fitElementLayout.count():
 			child = self.fitElementLayout.takeAt(0)
 			if child.widget():
-				child.widget().deleteLater()
+				child.widget().deleteLater()		
 
 		labels = ['Thickness'] + ['']*self.profile_table_fit_result.columnCount()
 		self.profile_table_fit_result.setHorizontalHeaderLabels(labels)
 
 		# set defaults
-		if self.debug: print('NDF_gui, reset_window - set all to 0')
-		self.comboTechnique.blockSignals(True)
-		self.nspectra = 0
-		self.spectra_id = 0
+		# if self.debug: print('NDF_gui, reset_window - set all to 0')
+		# self.comboTechnique.blockSignals(True)
+		self._nspectra = 0
+		self._spectra_id = 0
 		self.nsims = 0
-		self.simulation_id = 0
-		self.comboTechnique.blockSignals(False)
+		self._simulation_id = 0
+		# self.comboTechnique.blockSignals(False)
 
 		if self.debug: print('NDF_gui, reset_window - reset combos')
 		self.comboReactions.setVisible(False)
@@ -1314,14 +1326,14 @@ class Window(QMainWindow, Ui_MainWindow):
 				name = ''
 			else:
 				name = name.text().strip()
-			# if name.strip() != '':
 			checkBox = QCheckBox(name)
 			self.fitElementLayout.addWidget(checkBox)
 
 
+
 		for i in range(min(len(fit_checked), self.fitElementLayout.count())):
 			self.fitElementLayout.itemAt(i).widget().setChecked(fit_checked[i])
-
+	
 
 
 	def load_results(self, index_run = None):
@@ -1393,6 +1405,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		if self.debug: print('NDF_gui, change_idf_version - ',  self.idf_file.path_dir)
 
 		spectra_id_old = self.spectra_id
+
+		# as it is self.spectra_id is activate 2x, slowing down everything
 		self.reload_window()
 		self.spectra_id = spectra_id_old
 
@@ -2744,6 +2758,7 @@ if __name__ == "__main__":
 	pyqtRemoveInputHook()
 
 	win = Window()
+	win.show()
 
 	if len(argv)>1:
 		if '--debug' in argv:
@@ -2751,7 +2766,7 @@ if __name__ == "__main__":
 		if '-' != argv[-1][0]:
 			win.open(fileName = argv[-1])
 
-	win.show()
+	# win.show()
 
 	exit(app.exec())
 

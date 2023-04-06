@@ -32,7 +32,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>IDF Viewer</string>
+   <string>IBA Studio</string>
   </property>
   <property name="toolTip">
    <string extracomment="click to enlarge"/>
@@ -1735,6 +1735,12 @@
            <layout class="QGridLayout" name="gridLayout_2">
             <item row="0" column="0">
              <layout class="QFormLayout" name="fitElementLayout">
+              <property name="sizeConstraint">
+               <enum>QLayout::SetDefaultConstraint</enum>
+              </property>
+              <property name="fieldGrowthPolicy">
+               <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+              </property>
               <property name="leftMargin">
                <number>2</number>
               </property>
@@ -3192,6 +3198,7 @@
     </widget>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionNew_Window"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
@@ -3363,6 +3370,14 @@
   <action name="actionClear_idv_file">
    <property name="text">
     <string>Clear idv file - run history</string>
+   </property>
+  </action>
+  <action name="actionNew_Window">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>New Window</string>
    </property>
   </action>
  </widget>

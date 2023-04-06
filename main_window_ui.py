@@ -636,6 +636,8 @@ class Ui_MainWindow(object):
         self.gridLayout_2 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.fitElementLayout = QtWidgets.QFormLayout()
+        self.fitElementLayout.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
+        self.fitElementLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
         self.fitElementLayout.setContentsMargins(2, 2, -1, -1)
         self.fitElementLayout.setObjectName("fitElementLayout")
         self.gridLayout_2.addLayout(self.fitElementLayout, 0, 0, 1, 1)
@@ -1147,11 +1149,15 @@ class Ui_MainWindow(object):
         self.actionAdd_RBS_reactions.setObjectName("actionAdd_RBS_reactions")
         self.actionClear_idv_file = QtWidgets.QAction(MainWindow)
         self.actionClear_idv_file.setObjectName("actionClear_idv_file")
+        self.actionNew_Window = QtWidgets.QAction(MainWindow)
+        self.actionNew_Window.setEnabled(False)
+        self.actionNew_Window.setObjectName("actionNew_Window")
         self.menuExport.addAction(self.actionSpectrum)
         self.menuExport.addAction(self.action_NDF_Input)
         self.menuImport.addAction(self.actiongeo_file)
         self.menuFile.addAction(self.actionNew)
         self.menuFile.addAction(self.actionOpen)
+        self.menuFile.addAction(self.actionNew_Window)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSave_As)
@@ -1325,7 +1331,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "IDF Viewer"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "IBA Studio"))
         self.groupBox_2.setTitle(_translate("MainWindow", "Notes"))
         self.notes_user.setPlaceholderText(_translate("MainWindow", "Author"))
         self.notes_note.setPlaceholderText(_translate("MainWindow", "Notes"))
@@ -1567,3 +1573,4 @@ class Ui_MainWindow(object):
         self.actionOpen_NDF_Manual.setText(_translate("MainWindow", "Open NDF Manual"))
         self.actionAdd_RBS_reactions.setText(_translate("MainWindow", "Add RBS reactions..."))
         self.actionClear_idv_file.setText(_translate("MainWindow", "Clear idv file - run history"))
+        self.actionNew_Window.setText(_translate("MainWindow", "New Window"))
