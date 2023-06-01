@@ -293,7 +293,6 @@ class Window(QMainWindow, Ui_MainWindow):
 	def connectSignalsSlots(self):
 		# file menu
 		self.actionNew.triggered.connect(self.new)
-		# self.actionNew_Window.triggered.connect(self.new_window)
 		self.actionOpen.triggered.connect(self.open)
 		self.actionSave.triggered.connect(self.save)
 		self.actionSave_As.triggered.connect(self.save_as)
@@ -656,10 +655,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.geo_projectile_out.setText(reactions[0]['exitparticle'])
 
 
-	# def new_window(self):
-		# new_window = Window()
-		# new_window.show()
-		# self.new_windows.append(new_window)
 
 
 
