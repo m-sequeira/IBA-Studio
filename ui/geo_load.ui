@@ -48,7 +48,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1908,7 +1908,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="tab_4">
          <attribute name="title">
@@ -3380,6 +3380,15 @@
   </action>
  </widget>
  <tabstops>
+  <tabstop>notes_user</tabstop>
+  <tabstop>notes_note</tabstop>
+  <tabstop>comboSpectrum_id</tabstop>
+  <tabstop>comboTechnique</tabstop>
+  <tabstop>comboReactions</tabstop>
+  <tabstop>copySpectra_button</tabstop>
+  <tabstop>loadSpectrumButton</tabstop>
+  <tabstop>appendSpectrumButton</tabstop>
+  <tabstop>deleteSpectrumButton</tabstop>
   <tabstop>geo_energy</tabstop>
   <tabstop>geo_fwhm</tabstop>
   <tabstop>geo_projectile_in</tabstop>
@@ -3394,15 +3403,26 @@
   <tabstop>calibration_button</tabstop>
   <tabstop>elements_nelements</tabstop>
   <tabstop>elements_table</tabstop>
-  <tabstop>profile_table</tabstop>
   <tabstop>profile_nlayers</tabstop>
-  <tabstop>geo_angle_in_fit</tabstop>
-  <tabstop>notes_user</tabstop>
-  <tabstop>notes_note</tabstop>
-  <tabstop>geo_angle_out_fit</tabstop>
-  <tabstop>checkCharge</tabstop>
-  <tabstop>comboPileup</tabstop>
+  <tabstop>profile_table</tabstop>
+  <tabstop>comboSpectrum_id_results</tabstop>
+  <tabstop>comboSimulation</tabstop>
+  <tabstop>copyNDFparam_button</tabstop>
+  <tabstop>ndfMoreButton</tabstop>
+  <tabstop>checkEnergy</tabstop>
+  <tabstop>geo_energy_fit</tabstop>
+  <tabstop>checkFWHM</tabstop>
+  <tabstop>geo_fwhm_fit</tabstop>
+  <tabstop>checkWindow</tabstop>
+  <tabstop>geo_window_min</tabstop>
   <tabstop>geo_window_max</tabstop>
+  <tabstop>checkAngles</tabstop>
+  <tabstop>geo_angle_in_fit</tabstop>
+  <tabstop>geo_angle_out_fit</tabstop>
+  <tabstop>checkCalibration</tabstop>
+  <tabstop>checkCharge</tabstop>
+  <tabstop>checkPileup</tabstop>
+  <tabstop>comboPileup</tabstop>
   <tabstop>pileup_param</tabstop>
   <tabstop>checkDoublescatter</tabstop>
   <tabstop>comboDoublescatter</tabstop>
@@ -3415,55 +3435,35 @@
   <tabstop>checkAdhoc_correction</tabstop>
   <tabstop>adhoc_element</tabstop>
   <tabstop>adhoc_parameters</tabstop>
+  <tabstop>fitElementArea</tabstop>
+  <tabstop>profile_min_thickness</tabstop>
+  <tabstop>profile_max_thickness</tabstop>
   <tabstop>tabResults</tabstop>
+  <tabstop>runList</tabstop>
   <tabstop>pushLoad_results</tabstop>
   <tabstop>run_NDF_button</tabstop>
-  <tabstop>advanced_prf_input_field</tabstop>
-  <tabstop>advanced_geo_input_field</tabstop>
-  <tabstop>advanced_str_input_field</tabstop>
-  <tabstop>comboBox_Advanced</tabstop>
-  <tabstop>advanced_tcn_input_field</tabstop>
-  <tabstop>tabWidget</tabstop>
-  <tabstop>loadSpectrumButton</tabstop>
-  <tabstop>comboSpectrum_id</tabstop>
-  <tabstop>geo_window_min</tabstop>
-  <tabstop>comboTechnique</tabstop>
-  <tabstop>comboSpectrum_id_results</tabstop>
-  <tabstop>checkAngles</tabstop>
-  <tabstop>appendSpectrumButton</tabstop>
-  <tabstop>checkWindow</tabstop>
-  <tabstop>geo_fwhm_fit</tabstop>
-  <tabstop>checkFWHM</tabstop>
-  <tabstop>geo_energy_fit</tabstop>
-  <tabstop>checkEnergy</tabstop>
-  <tabstop>deleteSpectrumButton</tabstop>
-  <tabstop>comboReactions</tabstop>
-  <tabstop>copySpectra_button</tabstop>
-  <tabstop>checkCalibration</tabstop>
-  <tabstop>comboSimulation</tabstop>
-  <tabstop>fitElementArea</tabstop>
-  <tabstop>profile_max_thickness</tabstop>
-  <tabstop>profile_min_thickness</tabstop>
-  <tabstop>copyNDFparam_button</tabstop>
-  <tabstop>ndfMoreButton</tabstop>
   <tabstop>geo_energy_fit_result</tabstop>
   <tabstop>geo_fwhm_fit_result</tabstop>
-  <tabstop>geo_angle_out_fit_result</tabstop>
   <tabstop>geo_angle_in_fit_result</tabstop>
+  <tabstop>geo_angle_out_fit_result</tabstop>
   <tabstop>geo_charge_fit_result</tabstop>
-  <tabstop>checkPileup</tabstop>
-  <tabstop>geo_calibration_b_fit_result</tabstop>
   <tabstop>geo_calibration_m_fit_result</tabstop>
+  <tabstop>geo_calibration_b_fit_result</tabstop>
   <tabstop>copyGeometry_button</tabstop>
   <tabstop>elements_table_fit_result</tabstop>
   <tabstop>elements_table_fit_result_initial</tabstop>
-  <tabstop>copyElements_button</tabstop>
-  <tabstop>profile_table_fit_result</tabstop>
   <tabstop>nlayers_fit_result</tabstop>
   <tabstop>radioButton</tabstop>
   <tabstop>radio_profile_graph</tabstop>
   <tabstop>copyProfile_button</tabstop>
-  <tabstop>runList</tabstop>
+  <tabstop>profile_table_fit_result</tabstop>
+  <tabstop>comboBox_Advanced</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>copyElements_button</tabstop>
+  <tabstop>advanced_tcn_input_field</tabstop>
+  <tabstop>advanced_str_input_field</tabstop>
+  <tabstop>advanced_geo_input_field</tabstop>
+  <tabstop>advanced_prf_input_field</tabstop>
   <tabstop>tabAdvanced</tabstop>
   <tabstop>advanced_spc_input_field</tabstop>
   <tabstop>comboBox_results_Advanced</tabstop>
@@ -3476,6 +3476,7 @@
   <tabstop>pushSaveAs_advanced_inputs</tabstop>
   <tabstop>run_NDF_button_advanced</tabstop>
   <tabstop>pushOpenFolder_advanced</tabstop>
+  <tabstop>pushLoad_tcn</tabstop>
  </tabstops>
  <resources/>
  <connections>
