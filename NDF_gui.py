@@ -37,6 +37,7 @@ from pyIBA import IDF
 from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol, pretty_formula_ratio
 from NDF_project import project, load as load_project
 from NDF_advanced import NDF_advanced
+from pyIBA.codes.NDF import read_geo_file
 
 from numpy import loadtxt, savetxt, array as nparray, zeros_like as npzeros_like
 import matplotlib.pyplot as plt
@@ -298,6 +299,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.actionSave_As.triggered.connect(self.save_as)
 		self.actionExit.triggered.connect(self.quit)
 		self.actionSpectrum.triggered.connect(self.export_spectrum)
+		self.action_import_geo_file.triggered.connect(self.import_geo_file)
 
 		# edit menu
 		self.actionAdd_RBS_reactions.triggered.connect(self.edit_reactions_window)
@@ -723,7 +725,7 @@ class Window(QMainWindow, Ui_MainWindow):
 	def save_as(self, givenFileName = ''):
 		if self.debug: print('NDF_gui, save_as path', givenFileName)
 		if givenFileName in ['', False] :
-			fileName,_ = QFileDialog.getSaveFileName(self, 'Save File')
+			fileName,_ = QFileDialog.getSaveFileName(self, 'Save File', '', 'xml (*.xml)')
 			if fileName == '':
 				return
 		else:
@@ -788,6 +790,22 @@ class Window(QMainWindow, Ui_MainWindow):
 			data = data.T
 
 			savetxt(fileName, data)
+
+	def import_geo_file(self):
+		options = QFileDialog.Options()
+		fileName, _ = QFileDialog.getOpenFileName(self, "Import geo file...", "", "geo (*.geo)", options=options)
+
+		if fileName != '':
+			try:
+				if self.path == None:
+					self.save_as()
+
+				self.idf_file.set_data_from_geo_file(fileName, spectra_id = self.spectra_id)
+				self.reload_window()
+				
+			except Exception as e:
+				# handle exceptions here
+				print(str(e))
 
 
 	
@@ -939,25 +957,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		for widget in self.edit_widgets_checkBoxes:
 			widget.setChecked(False)
-
-		# for widget in QApplication.allWidgets():
-			# for ele2reset in [QLineEdit, QPlainTextEdit]:
-			# 	if isinstance(widget, ele2reset):
-			# 		widget.clear()
-			# 		break
-			
-			# if isinstance(widget, QTableWidget):
-			# 	widget.clearContents()
-
-			# elif isinstance(widget, QCheckBox):
-			# 	widget.setChecked(False)
-
-			
-
-
-			# widget.setStyleSheet('QLineEdit' +
-			# 					"{"
-			# 					"}")
 
 		while self.fitElementLayout.count():
 			child = self.fitElementLayout.takeAt(0)
