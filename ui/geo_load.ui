@@ -48,7 +48,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1908,7 +1908,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>3</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_4">
          <attribute name="title">
@@ -3347,7 +3347,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>geo file...</string>
+    <string>geo file [beta]...</string>
    </property>
   </action>
   <action name="actionRemove_results_from_IDF">

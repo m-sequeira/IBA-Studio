@@ -1197,8 +1197,8 @@ class Ui_MainWindow(object):
         self.label_geo_geometry.setBuddy(self.geo_angle_in)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
-        self.tabResults.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(0)
+        self.tabResults.setCurrentIndex(0)
         self.tabAdvanced.setCurrentIndex(0)
         self.elements_nelements.valueChanged['int'].connect(self.elements_nelements.setValue) # type: ignore
         self.checkEnergy.toggled['bool'].connect(self.geo_energy_fit.setEnabled) # type: ignore
@@ -1567,7 +1567,7 @@ class Ui_MainWindow(object):
         self.actionExport_fit.setText(_translate("MainWindow", "Export fit..."))
         self.actionSpectrum.setText(_translate("MainWindow", "Spectrum..."))
         self.actionAbout.setText(_translate("MainWindow", "About..."))
-        self.action_import_geo_file.setText(_translate("MainWindow", "geo file..."))
+        self.action_import_geo_file.setText(_translate("MainWindow", "geo file [beta]..."))
         self.actionRemove_results_from_IDF.setText(_translate("MainWindow", "Remove NDF results from IDF"))
         self.actionOpen_NDF_Manual.setText(_translate("MainWindow", "Open NDF Manual"))
         self.actionAdd_RBS_reactions.setText(_translate("MainWindow", "Add RBS reactions..."))

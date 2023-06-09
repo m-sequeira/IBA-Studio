@@ -286,7 +286,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.path_dir = None
 		self.file = None
 
-		self.setWindowTitle('IBA Viewer: New file')
+		self.setWindowTitle('IBA Studio: New file')
 		self.reload_window()
 		self.update_runList()
 		
@@ -1044,6 +1044,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def convert_window_energy(self, value, channel2energy = True):
 		value = int(float(value))
+		if self.idf_file.get_technique(spectra_id = self.spectra_id) in ['PIXE', 'SIMS']:
+			return value		
 
 		if self.settings['Appearance'].getboolean('energy_scale_keV'):
 			# m, b = 1, 0
@@ -1487,7 +1489,14 @@ class Window(QMainWindow, Ui_MainWindow):
 				if i == 0:			
 					self.ax_result.plot(m*nparray(data_x_given[cut_channel_min:cut_channel_max]) + b, data_y_given[cut_channel_min:cut_channel_max], 'o', ms = 2, label = 'Exp.')
 				if len(data_y_fit) > 1:
-					self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_fit[cut_channel_min:cut_channel_max], label = 'Fit ' + reactions[i]['code'])
+					try:
+						abr_code = reactions[i]['code'].split()
+						abr_code[-1] = '%.1f' %(float(abr_code[-1])/1000)
+						abr_code = ' '.join(abr_code)
+					except:
+						abr_code = reactions[i]['code']
+					
+					self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_fit[cut_channel_min:cut_channel_max], label = 'Fit ' + abr_code)
 
 				# this condition is separeted from the one above so that the plot looks more organized
 				# if i == nreactions - 1 and i != 0:
@@ -1510,7 +1519,7 @@ class Window(QMainWindow, Ui_MainWindow):
 				self.ax_result.set_xlabel('Energy (keV)')
 			else:
 				self.ax_result.set_xlabel('Energy (Channels)')
-			self.ax_result.legend(frameon=False, ncol = 2)
+			self.ax_result.legend(frameon=False, ncol = 1)
 
 
 
