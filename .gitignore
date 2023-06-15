@@ -4,6 +4,8 @@ run_tests_pyIBA
 pyIBA_0
 pyIBA
 tests
+build
+dist
 
 *.pyc
 *.res
