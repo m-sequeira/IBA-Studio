@@ -2769,7 +2769,13 @@ if __name__ == "__main__":
 		if '-' != argv[-1][0]:
 			win.open(fileName = argv[-1])
 
-	# win.show()
+	try:
+		import pyi_splash
+		pyi_splash.update_text('UI Loaded ...')
+		pyi_splash.close()
+	except:
+		pass
+
 
 	exit(app.exec())
 
