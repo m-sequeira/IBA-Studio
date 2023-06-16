@@ -281,10 +281,13 @@ class Window(QMainWindow, Ui_MainWindow):
 		with open(path_bat,'w') as file:
 			file.write('@echo off \n')
 			file.write('cd ' + path + '\n')
+			file.write('echo \'Run started...\' > run_status.res \n')
 			file.write(cmd + '\n\n\n')
+			file.write('echo \'Finished\' > run_status.res \n')
 			file.write('echo \n')
 			file.write('echo Press enter to close:\n')
-			file.write('pause >null')
+			if self.main_window.settings['Actions'].getboolean('keep_NDF_open'):
+				file.write('pause >null')
 
 		# run = subprocess.Popen(['bash', 'ndf.bat'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)#, text=True) #, shell = True
 		run = Popen(shell + ' ' + path_bat, shell = True)#, text=True) #
