@@ -63,7 +63,7 @@ splash = Splash(
     text_size=10,
     text_string= 'Loading...',
     minify_script=True,
-    always_on_top=True,
+    always_on_top=False,
 )
 
 exe = EXE(

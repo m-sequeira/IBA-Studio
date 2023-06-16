@@ -16,13 +16,11 @@ from PyQt5.QtWidgets import (
 	QMenu,
 	QFileDialog, QTableWidgetItem, 
 	QLineEdit, QComboBox, QWidget, QTableWidget, QPlainTextEdit, QVBoxLayout,
-	QCheckBox, QSpacerItem
+	QCheckBox, QSpacerItem, QStyleFactory
 	)
 # from PyQt5.QtCore.Qt import MatchContains
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-
-#from PyQt5.uic import loadUi
+from PyQt5.QtGui import QFont, QIcon
 
 
 from main_window_ui import Ui_MainWindow
@@ -53,7 +51,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.setupUi(self)
 		self.spacerItem = QSpacerItem(20, 30)
 		self.spacerItem_result = QSpacerItem(20, 40)
-
+		self.setWindowIcon(QIcon('icon_notext.png'))
 
 		self.connectSignalsSlots()
 
@@ -2753,30 +2751,37 @@ class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
 
 
 
-
+import traceback
 if __name__ == "__main__":
 	app = QApplication(argv)
 
-	from PyQt5.QtCore import pyqtRemoveInputHook
-	pyqtRemoveInputHook()
-
-	win = Window()
-	win.show()
-
-	if len(argv)>1:
-		if '--debug' in argv:
-			win.debug = True
-		if '-' != argv[-1][0]:
-			win.open(fileName = argv[-1])
+	# from PyQt5.QtCore import pyqtRemoveInputHook
+	# pyqtRemoveInputHook()
+	app.setStyle(QStyleFactory.create('Fusion'))	
+	font = QFont()
+	font.setPointSize(11)
+	app.setFont(font)
 
 	try:
-		import pyi_splash
-		pyi_splash.update_text('UI Loaded ...')
-		pyi_splash.close()
-	except:
-		pass
+		win = Window()
+		win.show()
+	
 
+		if len(argv)>1:
+			if '--debug' in argv:
+				win.debug = True
+			if '-' != argv[-1][0]:
+				win.open(fileName = argv[-1])
 
-	exit(app.exec())
+		try:
+			import pyi_splash
+			pyi_splash.update_text('UI Loaded ...')
+			pyi_splash.close()
+		except:
+			pass
 
+		exit(app.exec())
+	except Exception as e:
+		error_message = traceback.format_exc()
+		QMessageBox.critical(None, "Error: ", error_message)
 

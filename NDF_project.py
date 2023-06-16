@@ -89,7 +89,6 @@ def load(pickle_filename):
 	
 	project.path_dir = '/'.join(pickle_filename.split('/')[:-1]) + '/'
 	project.file_path = pickle_filename
-
 	return project
 
 
