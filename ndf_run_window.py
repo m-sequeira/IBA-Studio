@@ -255,7 +255,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def run_ndf_windows(self, idf_file):
 		shell = 'start cmd.exe /c'
-		# ndf_path = '\\NDF_10.0_2021-06-05\\NDF.exe'
 		ndf_path = '\\codes\\NDF_11_MS\\NDF.exe'
 
 		# get flags:
@@ -268,10 +267,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 		path = idf_file.path_dir
-		# file = idf_file.name + '.xml'
 		file = idf_file.spc_files[0]
 
-		# cwd = getcwd()
 		cwd = idf_file.executable_dir[:-1]
 		cmd = cwd + ndf_path + ' ' + file + ' ' + ndf_flags
 		path_bat = path + 'ndf.bat'
@@ -291,6 +288,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# run = subprocess.Popen(['bash', 'ndf.bat'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)#, text=True) #, shell = True
 		run = Popen(shell + ' ' + path_bat, shell = True)#, text=True) #
+
+		while run.poll() is None:
+			sleep(1)
 		
 
 	def run_ndf_linux(self, idf_file):
@@ -327,7 +327,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		
 		run = Popen(shell + ' -- bash ' + path_bat, shell = True)
 		
-		# self.run_state = run
 
 		while run.poll() is None:
 			sleep(1)
