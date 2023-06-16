@@ -85,7 +85,12 @@ class project():
 			dump(self, file)
 
 def load(pickle_filename):
-	return pickleLoad(open(pickle_filename, 'rb'))
+	project = pickleLoad(open(pickle_filename, 'rb'))
+	
+	project.path_dir = '/'.join(pickle_filename.split('/')[:-1]) + '/'
+	project.file_path = pickle_filename
+
+	return project
 
 
 

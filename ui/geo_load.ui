@@ -34,6 +34,10 @@
   <property name="windowTitle">
    <string>IBA Studio</string>
   </property>
+  <property name="windowIcon">
+   <iconset theme="a">
+    <normaloff>../splash.png</normaloff>../splash.png</iconset>
+  </property>
   <property name="toolTip">
    <string extracomment="click to enlarge"/>
   </property>

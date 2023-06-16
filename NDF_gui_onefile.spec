@@ -58,7 +58,7 @@ splash = Splash(
     'splash.png',
     binaries=a.binaries,
     datas=a.datas,
-    text_pos=(10, 490),
+    text_pos=(10, 505),
     text_color='black',
     text_size=10,
     text_string= 'Loading...',

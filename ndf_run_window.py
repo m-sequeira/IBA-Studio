@@ -208,7 +208,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		except Exception as e:
 			# if self.debug: raise e
 			pass
-			# mkdir(new_folder)
 
 
 		## Save any changes made in the main window while ndf_run_window is open
@@ -224,7 +223,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		idf_file_run = deepcopy(self.main_window.idf_file)
 		idf_file_run.save_idf(path_new_idf)
 
-		# project.append makes a deepcopy of the idf_file		
+		# project.append makes a deepcopy of the idf_file			
 		self.project.append(idf_file_run)		
 		self.project.save()
 		
@@ -245,9 +244,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		
 		self.worker.main_window = self.main_window
-		# self.worker = QThread()
-
-		# Step 6: Start the thread
+		
 		if not self.thread.isRunning():
 			print('Loading thread started')
 			self.thread.start()
@@ -263,7 +260,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# get flags:
 		options = ['fitmethod','channelcompreesion','convolute','distribution','smooth','normalisation']
-		code = []					
+		code = []
 		for o in options:			
 			code.append(idf_file.get_NDF_run_option(o)[0])
 
@@ -279,7 +276,8 @@ class Window(QMainWindow, Ui_MainWindow):
 		cmd = cwd + ndf_path + ' ' + file + ' ' + ndf_flags
 		path_bat = path + 'ndf.bat'
 
-		print(cmd)
+		if self.debug: print(cmd)
+
 		with open(path_bat,'w') as file:
 			file.write('@echo off \n')
 			file.write('cd ' + path + '\n')
@@ -297,7 +295,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		wine = 'wine'
 		ndf_path = '/codes/NDF_11_MS/NDF.exe'
 
-
 		# get flags:
 		options = ['fitmethod','channelcompreesion','convolute','distribution','smooth','normalisation']
 		code = []					
@@ -306,16 +303,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		ndf_flags = ' '.join(code)
 
-
 		path = idf_file.path_dir
-		# file = idf_file.name + '.xml' 
 		file = idf_file.spc_files[0]
 
 		cwd = idf_file.executable_dir[:-1]
 		cmd = wine + ' ' + cwd + ndf_path + ' ' + file + ' ' + ndf_flags
 		path_bat = path + 'ndf.bat'
 
-		print(cmd)
+		if self.debug: print(cmd)
+		
 		with open(path_bat,'w') as file:
 			file.write('cd ' + path + '\n')
 			file.write('echo \'Run started...\' > run_status.res \n')
