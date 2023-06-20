@@ -25,6 +25,8 @@ from pyIBA import IDF
 from pyIBA.codes.IDF2NDF import IDF2NDF
 from NDF_project import project
 
+import logging
+import traceback
 
 
 class Window(QMainWindow, Ui_MainWindow):
@@ -32,6 +34,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		super().__init__(parent)
 		self.setupUi(self)
 		self.connectSignalsSlots()
+
 
 		self.main_window = main_window
 		self.project = main_window.project
@@ -67,6 +70,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 		self.debug = self.main_window.debug
+
+		if self.debug:
+			logging.basicConfig(filename='IBAStudo.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+
 
 	def connectSignalsSlots(self):
 		self.runButton.clicked.connect(self.run_ndf)
@@ -182,6 +189,7 @@ class Window(QMainWindow, Ui_MainWindow):
 	def run_ndf(self):
 		print('Opening NDF...')
 		if self.debug: 
+			logging.warning('run_ndf started...')
 			print('ndf_run_windoww, run_ndf - at start nversions:', len(self.project.sim_version_history))
 			for p in self.project.sim_version_history:
 				print('\t', p.path_dir.split('/')[-1])
@@ -189,7 +197,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.main_window.pushLoad_results.setEnabled(True)
 
 		# create folder and copy the files from previous simulation to there (to avoid double scattering calculation etc)
-		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M:%S') + '_idv'
+		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M-%S') + '_idv'
 		path_new_idf = new_folder + '/' + self.main_window.idf_file.name + '.xml'
 
 		try:
@@ -206,9 +214,10 @@ class Window(QMainWindow, Ui_MainWindow):
 					for file in files:
 						copyfile(file, new_folder + '/' + file.split('/')[-1])
 		except Exception as e:
-			# if self.debug: raise e
-			pass
-
+			logging.error(f"Exception occurred: {str(e)}")
+			tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+			logging.error("".join(tb_str))			
+			
 
 		## Save any changes made in the main window while ndf_run_window is open
 		self.main_window.save_state()
@@ -218,30 +227,43 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		self.save_run_options(self.main_window.idf_file)
 
-		
-		# a copy of self.main_window.idf_file should be created before saving to avoid changing the origianl path_dir 
-		idf_file_run = deepcopy(self.main_window.idf_file)
-		idf_file_run.save_idf(path_new_idf)
+		try:
+			# a copy of self.main_window.idf_file should be created before saving to avoid changing the origianl path_dir 
+			idf_file_run = deepcopy(self.main_window.idf_file)
+			idf_file_run.save_idf(path_new_idf)
 
-		# project.append makes a deepcopy of the idf_file			
-		self.project.append(idf_file_run)		
-		self.project.save()
+			# project.append makes a deepcopy of the idf_file			
+			self.project.append(idf_file_run)		
+			self.project.save()
+		except Exception as e:
+			logging.error(f"Exception occurred: {str(e)}")
+			tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+			logging.error("".join(tb_str))
+			
+			return
 		
 		## decompress the IDF file into NDF files here instead of sentind the xml file to the NDF
 		try:
 			idf_file_run.export_ndf_inputs(path_dir = idf_file_run.path_dir)
 		except Exception as e:
-			if self.main_window.debug: raise e
+			logging.error(f"Exception occurred: {str(e)}")
+			tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+			logging.error("".join(tb_str))
+			
 			self.main_window.error_window.setText('Check geometry input\n' + str(e))
 			self.main_window.error_window.exec_()
 			return
 
 		OSname = platform()
-		if 'Linux' in OSname:
-			self.run_ndf_linux(idf_file_run)
-		elif 'Windows' in OSname:
-			self.run_ndf_windows(idf_file_run)
-
+		try:
+			if 'Linux' in OSname:
+				self.run_ndf_linux(idf_file_run)
+			elif 'Windows' in OSname:
+				self.run_ndf_windows(idf_file_run)
+		except Exception as e:
+			logging.error(f"Exception occurred: {str(e)}")
+			tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+			logging.error("".join(tb_str))
 		
 		self.worker.main_window = self.main_window
 		
