@@ -1,4 +1,7 @@
-from sys import argv, exit, path as syspath, setrecursionlimit
+import sys
+import traceback
+import logging
+
 from os import remove
 from shutil import rmtree
 from os.path import dirname, realpath, join as osjoin
@@ -43,7 +46,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
 # this might lead to system instabilities. A better copy algorithm needs to be implented to handle the deepcopy of large idf files
-setrecursionlimit(10000)
+sys.setrecursionlimit(10000)
 
 class Window(QMainWindow, Ui_MainWindow):
 	def __init__(self, parent=None):
@@ -2749,39 +2752,56 @@ class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
 			return None
 
 
+def excepthook(exc_type, exc_value, exc_tb):
+	tb_str = traceback.format_exception(exc_type, exc_value, exc_tb)
+	error_message = "".join(tb_str)
+    
+	logging.error("Uncaught exception:\n%s", error_message)
+    
+	QMessageBox.critical(None, "Error: ", error_message)
 
 
-import traceback
+
 if __name__ == "__main__":
-	app = QApplication(argv)
+	# Set up logging
+	logging.basicConfig(
+		level=logging.INFO,
+		format='%(asctime)s [%(levelname)s] %(message)s',
+		datefmt='%m/%d/%Y %I:%M:%S %p',
+		filename='IBAStudio_run.log',
+		filemode='a'
+	)
+
+	# Install exception hook
+	sys.excepthook = excepthook
+
+
+	app = QApplication(sys.argv)
 
 	# from PyQt5.QtCore import pyqtRemoveInputHook
 	# pyqtRemoveInputHook()
-	app.setStyle(QStyleFactory.create('Fusion'))	
+	# app.setStyle(QStyleFactory.create('Fusion'))	
 	font = QFont()
 	font.setPointSize(11)
 	app.setFont(font)
 
-	try:
-		win = Window()
-		win.show()
+	win = Window()
+	win.show()
+
 	
 
-		if len(argv)>1:
-			if '--debug' in argv:
-				win.debug = True
-			if '-' != argv[-1][0]:
-				win.open(fileName = argv[-1])
+	if len(sys.argv)>1:
+		if '--debug' in sys.argv:
+			win.debug = True
+		if '-' != sys.argv[-1][0]:
+			win.open(fileName = sys.argv[-1])
 
-		try:
-			import pyi_splash
-			pyi_splash.update_text('UI Loaded ...')
-			pyi_splash.close()
-		except:
-			pass
+	try:
+		import pyi_splash
+		pyi_splash.update_text('UI Loaded ...')
+		pyi_splash.close()
+	except:
+		pass
 
-		exit(app.exec())
-	except Exception as e:
-		error_message = traceback.format_exc()
-		QMessageBox.critical(None, "Error: ", error_message)
+	sys.exit(app.exec())
 
