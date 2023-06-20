@@ -1642,16 +1642,12 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.set_profile_fit_result_plot(profile_params)
 
 	def set_profile_fit_result_plot(self, profile_params):
-		# try:
-		#   self.profile_fit_result_plot.removeWidget(self.canvas_profile)
-		# except:
-		#   pass
-		self.figure_profile.clear()
-		
-
+		self.figure_profile.clear()		
 		self.ax_profile = self.figure_profile.add_subplot(111)
-		
 
+		if profile_params is None:
+			return
+		
 		for i,name in enumerate(profile_params['names']):
 			xx = [0]
 			yy = [0]
