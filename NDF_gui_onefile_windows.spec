@@ -29,6 +29,8 @@ for d in datas:
 	print(d)
 
 datas.append(('E:\\IBAStudio\\pyIBA\\pyIBA\\aux_files\\', 'pyIBA\\aux_files\\'))
+datas.append(('E:\\IBAStudio\\ui\\', 'ui\\'))
+datas.append(('E:\\IBAStudio\\logos\\', 'logos\\'))
 
 print('\nTo check if everything is ok run:\n diff -r pyIBA\\pyIBA\\codes\\ dist\\NDF_gui\\pyIBA\\codes\\ \n find dist\\NDF_gui\\pyIBA\\ -type f -not -name \'*.py\'\n')
 
@@ -54,7 +56,7 @@ a = Analysis(
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 splash = Splash(
-    'splash.png',
+    'logos/splash.png',
     binaries=a.binaries,
     datas=a.datas,
     text_pos=(10, 505),
@@ -87,6 +89,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['logo.ico']
+    icon=['logos/logo.ico']
 )
 
