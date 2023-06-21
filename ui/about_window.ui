@@ -6,27 +6,60 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>722</width>
-    <height>594</height>
+    <width>465</width>
+    <height>910</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>465</width>
+    <height>910</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>465</width>
+    <height>910</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>About</string>
   </property>
+  <property name="autoFillBackground">
+   <bool>true</bool>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>0</y>
-     <width>701</width>
-     <height>411</height>
+     <x>35</x>
+     <y>410</y>
+     <width>481</width>
+     <height>221</height>
     </rect>
    </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;IDF Viewer 1.0b (Beta version)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;October 2021&lt;/p&gt;&lt;p&gt;Created by Miguel Sequeira&lt;/p&gt;&lt;p&gt;For reporting bugs or give feedback please send an e-mail to: &lt;a href=&quot;mailto:miguel.sequeira@tecnico.ulisboa.pt?subject=[IDF Viewer]&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miguel.sequeira@tecnico.ulisboa.pt&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Please start the subject with &amp;quot;[IDF Viewer]&amp;quot;.&lt;/p&gt;&lt;p&gt;In case of a bug, include:&lt;/p&gt;&lt;p&gt;- the OS system;&lt;/p&gt;&lt;p&gt;- the steps to reproduce the bug;&lt;/p&gt;&lt;p&gt;- the files used if applicable;&lt;/p&gt;&lt;p&gt;- and of course, any other information that you might find helpful.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;NDF Version 11.0b (IDF Beta version)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;October 2021&lt;/p&gt;&lt;p&gt;Created by Nuno Pessoa Barradas, updated by Miguel Sequeira (IDF integration)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;For reporting bugs or give feedback please send an e-mail to: &lt;/span&gt;&lt;a href=&quot;mailto:miguel.sequeira@tecnico.ulisboa.pt?subject=[IDF Viewer]&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;miguel.sequeira@tecnico.ulisboa.pt&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Please start the subject with &amp;quot;[IBA Studio]&amp;quot;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;In case of a bug, include:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;- the OS system;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;- the steps to reproduce the bug;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;- the files used if applicable;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;- the IBAStudio_run.log file in the IBAStudio folder&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="textFormat">
     <enum>Qt::RichText</enum>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
    </property>
    <property name="openExternalLinks">
     <bool>true</bool>
@@ -38,27 +71,88 @@
   <widget class="QPushButton" name="push_openNDFManual">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>420</y>
-     <width>161</width>
+     <x>160</x>
+     <y>730</y>
+     <width>131</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>Open NDF Manual</string>
+    <string>NDF Manual...</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>450</y>
-     <width>591</width>
-     <height>101</height>
+     <x>34</x>
+     <y>770</y>
+     <width>431</width>
+     <height>121</height>
     </rect>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Refer to: &lt;/p&gt;&lt;p&gt;- N.P.Barradas, C. Jeynes, R.P. Webb, Appl. Phys. Lett. 71 (1997) 291&lt;/p&gt;&lt;p&gt;- C. Jeynes, N.P. Barradas, P.K. Marriott, M. Jenkin, E. Wendler, G. Boudreault, R.P. Webb,&lt;/p&gt;&lt;p&gt;J. Phys. D: Appl. Phys. 36 (2003) R97-R126 (Topical Review).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Refer to: &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;- N.P.Barradas, C. Jeynes, R.P. Webb, Appl. Phys. Lett. 71 (1997) 291&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;- C. Jeynes, N.P. Barradas, P.K. Marriott, M. Jenkin, E. Wendler, G. Boudreault, R.P. Webb,&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;J. Phys. D: Appl. Phys. 36 (2003) R97-R126 (Topical Review).&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_logo">
+   <property name="geometry">
+    <rect>
+     <x>28</x>
+     <y>-70</y>
+     <width>861</width>
+     <height>481</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>../logos/icon_text_nobackground.png</pixmap>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>640</y>
+     <width>381</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;NDF Version 11.0b (IDF Beta)&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;October 2021, Nuno Pessoa Barradas (core), Miguel Sequeira (IDF integration)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="Line" name="line">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>630</y>
+     <width>421</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>35</x>
+     <y>350</y>
+     <width>381</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;IBA Studio 1.0b (Beta)&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;June 2023, Miguel Sequeira&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
  </widget>

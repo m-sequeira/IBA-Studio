@@ -27,7 +27,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>1240</width>
+    <width>1232</width>
     <height>804</height>
    </size>
   </property>
@@ -35,8 +35,8 @@
    <string>IBA Studio</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="a">
-    <normaloff>../splash.png</normaloff>../splash.png</iconset>
+   <iconset>
+    <normaloff>../logos/icon_nobackground.png</normaloff>../logos/icon_nobackground.png</iconset>
   </property>
   <property name="toolTip">
    <string extracomment="click to enlarge"/>

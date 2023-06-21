@@ -1,18 +1,13 @@
 import sys
+import os
 import traceback
 import logging
 
-from os import remove
-from shutil import rmtree
-from os.path import dirname, realpath, join as osjoin
+from shutil import rmtree, copyfile
 from glob import glob 
 from webbrowser import open_new
 
-from shutil import copyfile
-from copy import deepcopy
-from pickle import load as pickleLoad
 from Settings import settings
-
 
 from PyQt5.QtWidgets import (
 	QApplication, QDialog, QMainWindow, QMessageBox, QListWidget,
@@ -21,9 +16,8 @@ from PyQt5.QtWidgets import (
 	QLineEdit, QComboBox, QWidget, QTableWidget, QPlainTextEdit, QVBoxLayout,
 	QCheckBox, QSpacerItem, QStyleFactory
 	)
-# from PyQt5.QtCore.Qt import MatchContains
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QDesktopServices
 
 
 from main_window_ui import Ui_MainWindow
@@ -33,7 +27,7 @@ from reactions_ui import Ui_Dialog as Ui_Reactions_Dialog
 from ndf_run_window import Window as NDF_Window
 from ndf_more_options import Window as ndf_more_options_window
 
-syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
+#sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
 from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol, pretty_formula_ratio
 from NDF_project import project, load as load_project
@@ -52,9 +46,18 @@ class Window(QMainWindow, Ui_MainWindow):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 		self.setupUi(self)
+
+    	# Check if we're running as a bundled application
+		if getattr(sys, 'frozen', False):
+			# If we are, use the path of the temporary folder that PyInstaller uses
+			self.exce_dir = sys._MEIPASS
+		else:
+			self.exce_dir = os.path.dirname(__file__)
+
+
 		self.spacerItem = QSpacerItem(20, 30)
 		self.spacerItem_result = QSpacerItem(20, 40)
-		self.setWindowIcon(QIcon('icon_notext.png'))
+		self.setWindowIcon(QIcon(os.path.join(self.exce_dir, 'logos','icon_nobackground.png')))
 
 		self.connectSignalsSlots()
 
@@ -238,8 +241,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		horizontalHeader.resizeSection(0, 135)
 		horizontalHeader.resizeSection(1, 70)
 
-		#self.executable_dir = dirname(realpath(__file__)) + '/'
-		self.executable_dir = osjoin(dirname(__file__), 'pyIBA') + '/'
+		# self.executable_dir = os.path.join(os.path.dirname(__file__), 'pyIBA') + '/'
 
 		self.error_window = self.message_window()
 
@@ -852,7 +854,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		for ext in ext_toclear:
 			files = glob(self.path_dir + name + '*' + ext)
 			for f in files:
-				remove(f)
+				os.remove(f)
 
 		for ext in ext_dir_toclear:
 			dirs = glob(self.path_dir + name + '*' + ext)
@@ -863,7 +865,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		name = self.file.split('.')[0] + '.idv'
 		files = glob(self.path_dir + name)
 		for f in files:
-			remove(f)
+			os.remove(f)
 
 		self.reload_button()
 
@@ -2596,19 +2598,25 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 			self.ax_profile.set_ylim(-5, 120)
 			self.figure_profile.tight_layout()
 
+
 class About_Window(QMainWindow, Ui_dialog_about):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 		self.setupUi(self)
-		self.executable_dir = osjoin(dirname(__file__), 'pyIBA') + '/'
-
+		 # Check if the application is running as a bundled application
+		if getattr(sys, 'frozen', False):
+			# The application is bundled and sys._MEIPASS is set
+			base_dir = sys._MEIPASS
+			image_path = os.path.join(base_dir, 'logos', 'icon_text_nobackground.png')
+			self.label_logo.setPixmap(QPixmap(image_path))
+			
 		self.push_openNDFManual.clicked.connect(self.open_NDF_manual)
 
 
 	def open_NDF_manual(self):
-		executable_dir = dirname(realpath(__file__)) + '/'
-		# print(realpath('aux_files/MANUAL_100a.pdf'))
-		open_new('file://' + realpath(executable_dir + 'pyIBA/pyIBA/aux_files/MANUAL_100a.pdf'))
+		executable_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
+		open_new('file://' + os.path.realpath(executable_dir + 'pyIBA/pyIBA/aux_files/MANUAL_100a.pdf'))
+		
 
 
 class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
