@@ -91,7 +91,7 @@ class settings():
 			# more information. Only the name of the file will be saved in 
 			# the idf file.
 
-			ebsfiles = crosssections.ebs
+			ebsfiles = path_to_crosssections.ebs
 
 
 			[tcn_files]

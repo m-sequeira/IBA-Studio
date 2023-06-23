@@ -42,7 +42,7 @@
       </rect>
      </property>
      <property name="text">
-      <string> </string>
+      <string/>
      </property>
      <property name="placeholderText">
       <string>Cutoff  a0  P(Cutoff)</string>
@@ -170,6 +170,9 @@
      </property>
     </widget>
     <widget class="QCheckBox" name="checkAdhoc_correction">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>11</x>
@@ -209,7 +212,7 @@
       <rect>
        <x>10</x>
        <y>65</y>
-       <width>151</width>
+       <width>351</width>
        <height>23</height>
       </rect>
      </property>

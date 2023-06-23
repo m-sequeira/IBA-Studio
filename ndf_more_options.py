@@ -34,6 +34,11 @@ class Window(QMainWindow, Ui_MainWindow):
 		self.foilMaterialCombo.clear()
 		self.foilMaterialCombo.addItems(foil_names)
 
+		ruthterford_file = self.main_window.settings['nonRutherford']
+		#ruthterford_file = [file for file in ruthterford_file][0]
+		text_check = 'Non-Rutherford file: ..%s' %ruthterford_file['ebsfiles'][-24:]
+		self.checkRutherford.setText(text_check)
+
 
 
 	def connectSignalsSlots(self):
