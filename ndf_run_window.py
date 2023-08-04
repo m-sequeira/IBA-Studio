@@ -1,4 +1,4 @@
-from NDF_run_ui import Ui_MainWindow
+from ui.NDF_run_ui import Ui_MainWindow
 from sys import argv, path as syspath
 from platform import platform
 from subprocess import Popen
