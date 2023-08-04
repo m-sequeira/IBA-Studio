@@ -30,7 +30,6 @@ for d in datas:
 	print(d)
 
 datas.append(('/home/user/IDF_python/IBAStudio/pyIBA/pyIBA/aux_files/', 'pyIBA/aux_files/'))
-datas.append(('/home/user/IDF_python/IBAStudio/logos/', 'logos/'))
 
 print('\nTo check if everything is ok run:\n diff -r pyIBA/pyIBA/codes/ dist/NDF_gui/pyIBA/codes/ \n find dist/NDF_gui/pyIBA/ -type f -not -name \'*.py\'\n')
 
@@ -39,7 +38,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['NDF_gui.py'],
+    ['iba_studio.py'],
     pathex=[],
     binaries=binaries, #('/home/user/IDF_python/IBAStudio/pyIBA/pyIBA/codes/NDF_11_MS/NDF.exe', 'pyIBA/codes/NDF_11_MS/')
     datas=datas,
@@ -55,38 +54,30 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-splash = Splash(
-    'logos/splash.png',
-    binaries=a.binaries,
-    datas=a.datas,
-    text_pos=(10, 505),
-    text_color='black',
-    text_size=10,
-    text_string= 'Loading...',
-    minify_script=True,
-    always_on_top=False,
-)
-
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    splash,
-    splash.binaries,
     [],
-    name='IBAStudio',
+    exclude_binaries=True,
+    name='IBAStudio_app',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='IBAStudio/files',
 )

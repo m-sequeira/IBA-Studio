@@ -639,3 +639,12 @@ Traceback (most recent call last):
     self.new_windows[-1].setWindowTitle('Profile:', self.runList.currentItem().text())
 TypeError: setWindowTitle(self, str): too many arguments
 
+08/04/2023 06:11:25  [ERROR] Uncaught exception:
+Traceback (most recent call last):
+  File "/home/user/IDF_python/IBAStudio/iba_studio.py", line 369, in onclick_profile
+    self.new_windows[-1].setWindowTitle('Profile:', self.runList.currentItem().text())
+TypeError: setWindowTitle(self, str): too many arguments
+
+08/04/2023 06:51:27  [INFO] A connection to the splash screen was successfully established.
+08/04/2023 06:52:15  [INFO] A connection to the splash screen was successfully established.
+08/04/2023 06:52:55  [INFO] A connection to the splash screen was successfully established.

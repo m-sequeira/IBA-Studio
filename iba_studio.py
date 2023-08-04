@@ -5,36 +5,32 @@ import logging
 
 from shutil import rmtree, copyfile
 from glob import glob 
-from webbrowser import open_new
+from about_window import About_Window
+from reactions_dialog import Reactions_Dialog
 
 from Settings import settings
 
 from PyQt5.QtWidgets import (
-	QApplication, QDialog, QMainWindow, QMessageBox, QListWidget,
-	QMenu,
+	QApplication, QMainWindow, QMessageBox, QMenu,
 	QFileDialog, QTableWidgetItem, 
-	QLineEdit, QComboBox, QWidget, QTableWidget, QPlainTextEdit, QVBoxLayout,
-	QCheckBox, QSpacerItem, QStyleFactory
+	QLineEdit, QComboBox, QTableWidget, QPlainTextEdit, QCheckBox, QSpacerItem
 	)
-from PyQt5.QtCore import Qt, QUrl
-from PyQt5.QtGui import QFont, QIcon, QPixmap, QDesktopServices
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QIcon
 
 
 from ui.main_window_ui import Ui_MainWindow
-from ui.about_window_ui import Ui_dialog_about
 from ui.ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
-from ui.reactions_ui import Ui_Dialog as Ui_Reactions_Dialog
-from ndf_run_window import Window as NDF_Window
-from ndf_more_options import Window as ndf_more_options_window
+from ndf_tab.ndf_run_window import Window as NDF_Window
+from ndf_tab.ndf_more_options import Window as ndf_more_options_window
 
 #sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
-from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, set_element_fit_symbol, pretty_formula_ratio
-from NDF_project import project, load as load_project
-from NDF_advanced import NDF_advanced
-from pyIBA.codes.NDF import read_geo_file
+from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, pretty_formula_ratio
+from ndf_tab.ndf_project import project, load as load_project
+from ndf_tab.ndf_advanced import NDF_advanced
 
-from numpy import loadtxt, savetxt, array as nparray, zeros_like as npzeros_like
+from numpy import savetxt, array as nparray, zeros_like as npzeros_like
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 
@@ -2599,184 +2595,6 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 			self.figure_profile.tight_layout()
 
 
-class About_Window(QMainWindow, Ui_dialog_about):
-	def __init__(self, parent=None):
-		super().__init__(parent)
-		self.setupUi(self)
-		 # Check if the application is running as a bundled application
-		if getattr(sys, 'frozen', False):
-			# The application is bundled and sys._MEIPASS is set
-			base_dir = sys._MEIPASS
-		else:
-            # The application is not bundled, so use the location of the script file
-			base_dir = os.path.dirname(os.path.realpath(__file__))
-
-		image_path = os.path.join(base_dir, 'logos', 'icon_text_nobackground.png')
-		self.label_logo.setPixmap(QPixmap(image_path))
-			
-		self.manual_path = os.path.join(base_dir, 'pyIBA', 'aux_files', 'MANUAL_100a.pdf')
-	
-		self.push_openNDFManual.clicked.connect(self.open_NDF_manual)
-
-
-	def open_NDF_manual(self):
-		# The path finding has to be repeated so that open_NDF_manual can be used without initiallizing the About_window,
-		# for instance when clickin on the open NDF manual menu item
-
-		if getattr(sys, 'frozen', False):
-			# The application is bundled and sys._MEIPASS is set
-			base_dir = sys._MEIPASS
-		else:
-            # The application is not bundled, so use the location of the script file
-			base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'pyIBA')
-		
-		manual_path = os.path.join(base_dir, 'pyIBA', 'aux_files', 'MANUAL_100a.pdf')
-	
-
-		# convert the file path to a QUrl object
-		url = QUrl.fromLocalFile(manual_path)
-
-		# open the PDF file
-		QDesktopServices.openUrl(url)
-
-
-class Reactions_Dialog(QDialog, Ui_Reactions_Dialog):
-	def __init__(self, reactions, technique = 'NRA'):
-		super(Reactions_Dialog, self).__init__()
-		self.setupUi(self)
-
-		self.connectSignalsSlots()
-
-		if reactions is None:
-			reactions = [{
-				'initialtargetparticle': '',
-				'incidentparticle': '',
-				'exitparticle': '',
-				'finaltargetparticle': '',
-				'reactionQ': '',
-				'code':''
-			}]
-
-		self.reactions = reactions
-
-
-		if technique == 'ERDA':
-			self.initial_target_label.setEnabled(False)
-			self.final_target_label.setEnabled(False)
-			self.QEnergy_label.setEnabled(False)
-			self.initial_target_atom.setEnabled(False)
-			self.final_target_atom.setEnabled(False)
-			self.qenergy.setEnabled(False)
-
-
-		self.update_comboReactions()
-		self.onchange_reaction()
-
-	def connectSignalsSlots(self):
-		self.add_button.clicked.connect(self.add_reaction)
-		self.save_button.clicked.connect(self.save_reaction)
-		self.delete_button.clicked.connect(self.delete_reaction)
-
-		self.comboReactions.currentIndexChanged.connect(self.onchange_reaction)
-
-
-	def onchange_reaction(self):
-		index = self.comboReactions.currentIndex()
-		reaction = self.reactions[index]
-
-		self.initial_target_atom.setText(reaction['initialtargetparticle'])
-		self.incident_ion.setText(reaction['incidentparticle'])
-		self.exit_ion.setText(reaction['exitparticle'])
-		self.final_target_atom.setText(reaction['finaltargetparticle'])
-		self.qenergy.setText(reaction['reactionQ'])
-
-	def save_reaction(self):
-		index = self.comboReactions.currentIndex()
-
-		self.edit_reaction(index)
-		self.update_comboReactions()
-		self.comboReactions.setCurrentIndex(index)      
-
-	def add_reaction(self):
-		curr_index = self.comboReactions.currentIndex()
-		if self.reactions[curr_index]['code'] != '':
-			index = len(self.reactions)
-			reaction = self.reactions[curr_index].copy()
-			self.reactions.append(reaction)
-		else:
-			index = curr_index
-
-		self.edit_reaction(index)
-		self.update_comboReactions()
-		self.comboReactions.setCurrentIndex(index)
-
-	def delete_reaction(self):
-		index = self.comboReactions.currentIndex()
-
-		if len(self.reactions) == 1:
-			return
-
-		self.reactions.pop(index)
-		self.update_comboReactions()
-		if index >0:
-			self.comboReactions.setCurrentIndex(index-1)
-		else:
-			self.comboReactions.setCurrentIndex(0) 
-		self.onchange_reaction()
-
-
-	def edit_reaction(self, index):
-		reaction = self.reactions[index]
-		
-		reaction['initialtargetparticle'] = self.initial_target_atom.text()
-		reaction['incidentparticle'] = self.incident_ion.text()
-		reaction['exitparticle'] = self.exit_ion.text()
-		reaction['finaltargetparticle'] = self.final_target_atom.text()
-		reaction['reactionQ'] = self.qenergy.text()
-
-	
-		try:
-			energy_code = '%0.2f' %(float(reaction['reactionQ']))
-		except:
-			energy_code = ''
-
-		for key, item in reaction.items():
-			if item is None:
-				reaction[key] = ''
-
-
-		reaction['code'] = '%s(%s, %s)%s %s' %(
-						reaction['initialtargetparticle'], reaction['incidentparticle'], reaction['exitparticle'], 
-						reaction['finaltargetparticle'], energy_code)
-
-		self.reactions[index] = reaction
-
-
-
-	def update_comboReactions(self):
-		name_list = []
-
-		if self.reactions is not None:
-			name_list = [r['code'] for r in self.reactions]
-
-		self.comboReactions.blockSignals(True)
-		self.comboReactions.clear()
-		self.comboReactions.addItems(name_list)
-		self.comboReactions.blockSignals(False)
-
-
-	
-
-
-
-	def get_values(self):
-		if self.exec_() == QDialog.Accepted:
-			self.save_reaction()
-			return self.reactions
-		else:
-			return None
-
-
 def excepthook(exc_type, exc_value, exc_tb):
 	tb_str = traceback.format_exception(exc_type, exc_value, exc_tb)
 	error_message = "".join(tb_str)
@@ -2829,4 +2647,6 @@ if __name__ == "__main__":
 		pass
 
 	sys.exit(app.exec())
+
+
 
