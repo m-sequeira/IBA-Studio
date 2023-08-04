@@ -669,7 +669,7 @@ class Window(QMainWindow, Ui_MainWindow):
 				self.ndf_window.close()
 
 			options = QFileDialog.Options()
-			fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml)", options=options)
+			fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml *.idf)", options=options)
 
 
 		if fileName != '':
@@ -728,15 +728,15 @@ class Window(QMainWindow, Ui_MainWindow):
 	def save_as(self, givenFileName = ''):
 		if self.debug: print('NDF_gui, save_as path', givenFileName)
 		if givenFileName in ['', False] :
-			fileName,_ = QFileDialog.getSaveFileName(self, 'Save File', '', 'xml (*.xml)')
+			fileName,_ = QFileDialog.getSaveFileName(self, 'Save File', '', 'idf (*.idf *.xml)')
 			if fileName == '':
 				return
 		else:
 			fileName = givenFileName
 
-		## check if fileName ends with .xml
+		## check if fileName ends with .xml otherwise save it as idf
 		if fileName[-4:] != '.xml':
-			fileName = fileName + '.xml'
+			fileName = fileName + '.idf'
 
 		if fileName != '':
 			self.setWindowTitle('IDF Viewer: ' + fileName)
@@ -899,7 +899,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		
 		self.open(fileName = self.path)
 		self.reload_window()
-		# the above will initiate the change_idf in the row "in xml file"
+		# the above will initiate the change_idf in the row "in idf file"
 		self.runList.setCurrentRow(self.runList.count()-1)
 
 		
@@ -1390,7 +1390,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		text_run = self.runList.currentItem().text()
 
 
-		if 'In xml file' == text_run:
+		if 'In idf file' == text_run:
 			self.idf_file = IDF(self.path)
 		else:
 			if self.debug: print('NDF_gui, change_idf_version - deep copy made of i:', index_run)
