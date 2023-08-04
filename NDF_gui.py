@@ -20,10 +20,10 @@ from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QDesktopServices
 
 
-from main_window_ui import Ui_MainWindow
-from about_window_ui import Ui_dialog_about
-from ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
-from reactions_ui import Ui_Dialog as Ui_Reactions_Dialog
+from ui.main_window_ui import Ui_MainWindow
+from ui.about_window_ui import Ui_dialog_about
+from ui.ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
+from ui.reactions_ui import Ui_Dialog as Ui_Reactions_Dialog
 from ndf_run_window import Window as NDF_Window
 from ndf_more_options import Window as ndf_more_options_window
 

@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow
 
 from pyIBA import IDF
 from ndf_run_window import Window as NDF_Window
-from ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
+from ui.ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 
 

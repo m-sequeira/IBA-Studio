@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, pyqtSlot
 # from pyIBA.codes.IDF2NDF import IDF2NDF
 # from NDF_project import project
 
-from ndf_more_options_ui import Ui_MainWindow
+from ui.ndf_more_options_ui import Ui_MainWindow
 
 
 class Window(QMainWindow, Ui_MainWindow):
