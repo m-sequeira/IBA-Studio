@@ -198,7 +198,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		# create folder and copy the files from previous simulation to there (to avoid double scattering calculation etc)
 		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M-%S') + '_idv'
-		path_new_idf = new_folder + '/' + self.main_window.idf_file.name + '.xml'
+		path_new_idf = new_folder + '/' + self.main_window.idf_file.name + '.idf'
 
 		try:
 			mkdir(new_folder)

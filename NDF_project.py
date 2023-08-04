@@ -62,7 +62,7 @@ class project():
 
 			prev_names.append(name)
 
-		prev_names.append('In xml file')
+		prev_names.append('In idf file')
 
 		return prev_names
 
