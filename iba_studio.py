@@ -126,15 +126,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		return menu
 
-	def copy_geo_spectra(self, target_spectra_id):
-		if target_spectra_id == 'All':
-			target_spectra_id = range(self.nspectra)
-			for spectra_id in target_spectra_id:
-				self.save_geometry_box(target_spectra_id = spectra_id)
+	def copy_geo_spectra(self, target_id):
+		if target_id != 'All':
+			target_id = int(target_id)
+		self.idf_file.unify_geo_parameters(master_id = self.spectra_id, target_id = target_id)
 
-		else:
-			target_spectra_id = int(target_spectra_id)
-			self.save_geometry_box(target_spectra_id = target_spectra_id)
 
 	def copy_model_spectra(self, target_spectra_id):
 		if target_spectra_id == 'All':
@@ -1494,9 +1490,11 @@ class Window(QMainWindow, Ui_MainWindow):
 						abr_code = ' '.join(abr_code)
 					except:
 						abr_code = reactions[i]['code']
+					try:
+						self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_fit[cut_channel_min:cut_channel_max], label = 'Fit ' + abr_code)
+					except:
+						pass
 					
-					self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_fit[cut_channel_min:cut_channel_max], label = 'Fit ' + abr_code)
-
 				# this condition is separeted from the one above so that the plot looks more organized
 				# if i == nreactions - 1 and i != 0:
 				# 	self.ax_result.plot(m*nparray(data_x_fit[cut_channel_min:cut_channel_max]) + b, data_y_sum[cut_channel_min:cut_channel_max], ms = 2, label = 'Fit. Total')

@@ -1,8 +1,7 @@
-from ui.NDF_run_ui import Ui_MainWindow
 from sys import argv, path as syspath
 from platform import platform
 from subprocess import Popen
-from os.path import dirname, isfile, join as osjoin#, dirname, realpath
+from os.path import dirname, isfile, abspath, join as osjoin#, dirname, realpath
 from os import mkdir, listdir
 from shutil import copyfile, copytree
 from datetime import datetime
@@ -20,7 +19,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import Qt, pyqtSlot, QObject, QThread, pyqtSignal
 
-syspath.insert(0, osjoin(dirname(__file__), 'pyIBA'))
+syspath.insert(0, abspath(osjoin(dirname(__file__), '..')))
+syspath.insert(0, abspath(osjoin(dirname(__file__), '../pyIBA')))
+from ui.NDF_run_ui import Ui_MainWindow
+
 from pyIBA import IDF
 from pyIBA.codes.IDF2NDF import IDF2NDF
 from ndf_tab.ndf_project import project
