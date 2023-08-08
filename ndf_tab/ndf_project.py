@@ -74,9 +74,7 @@ class project():
 					status = file.readline()
 					running_states.append('Run' in status)
 			except:
-				running_states.append(False)
-
-			
+				running_states.append(False)			
 
 		return running_states
 
