@@ -20,7 +20,6 @@ from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import Qt, pyqtSlot, QObject, QThread, pyqtSignal
 
 syspath.insert(0, abspath(osjoin(dirname(__file__), '..')))
-syspath.insert(0, abspath(osjoin(dirname(__file__), '../pyIBA')))
 from ui.NDF_run_ui import Ui_MainWindow
 
 from pyIBA import IDF
