@@ -1,9 +1,13 @@
 # Specify filepatterns you want git to ignore.
 
-run_tests_pyIBA
-pyIBA_0
-pyIBA
+
+pyIBA*
+
+*.spec
+run_main.py
+
 tests
+*_env
 build
 dist
 

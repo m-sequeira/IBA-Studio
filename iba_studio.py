@@ -21,12 +21,11 @@ from PyQt5.QtGui import QFont, QIcon
 
 from ui.main_window_ui import Ui_MainWindow
 from ui.ndf_spectra_fit_ui import Ui_MainWindow as Ui_NDF_Fit_Figure
-from ndf_tab.ndf_run_window import Window as NDF_Window
-from ndf_tab.ndf_more_options import Window as ndf_more_options_window
 
-#sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'pyIBA'))
 from pyIBA import IDF
 from pyIBA.auxiliar import latex_atom, simplify_atomic_formula, pretty_formula_ratio
+from ndf_tab.ndf_run_window import Window as NDF_Window
+from ndf_tab.ndf_more_options import Window as ndf_more_options_window
 from ndf_tab.ndf_project import project, load as load_project
 from ndf_tab.ndf_advanced import NDF_advanced
 
@@ -2601,9 +2600,7 @@ def excepthook(exc_type, exc_value, exc_tb):
     
 	QMessageBox.critical(None, "Error: ", error_message)
 
-
-
-if __name__ == "__main__":
+def main():
 	# Set up logging
 	logging.basicConfig(
 		level=logging.INFO,
@@ -2648,3 +2645,5 @@ if __name__ == "__main__":
 
 
 
+if __name__ == "__main__":
+	main()
