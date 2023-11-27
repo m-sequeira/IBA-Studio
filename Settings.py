@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os.path import dirname, realpath, isfile
+import os
 import sys
 import textwrap
 
@@ -10,14 +10,14 @@ class settings():
 		# Get the path of the executable
 		if getattr(sys, 'frozen', False):
 			# we are running in a bundle
-			folder_exe = dirname(sys.executable)
+			folder_exe = os.path.dirname(sys.executable)
 		else:
 			# we are running in a normal Python environment
-			folder_exe = dirname(realpath(__file__))
+			folder_exe = os.path.dirname(os.path.realpath(__file__))
 
-		self.settings_path = folder_exe + '/settings.ini'
+		self.settings_path = os.path.join(folder_exe, 'settings.ini')
 
-		if not isfile(self.settings_path):
+		if not os.path.isfile(self.settings_path):
 			self.create_new_settings()
 		
 		self.parser.read(self.settings_path)
