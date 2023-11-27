@@ -2,7 +2,7 @@
 IBA Studio
 =========================
 
-.. image:: .. figure:: logos/icon_text_nobackground.png
+.. image:: logos/icon_text_nobackground.png
    :width: 350
 
 Introduction
