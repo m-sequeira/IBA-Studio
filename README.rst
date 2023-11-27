@@ -13,7 +13,7 @@ Introduction
 Background
 ==========
 
-Ion Beam Analysis (IBA) is a suite of powerful techniques with applications spanning materials science, nuclear physics, and biology. Despite its vast potential, the intricacies of managing and analyzing IBA data have often posed challenges. The introduction of the Ion Beam Data Format (IDF) aims at a more efficient data management, aligning with the FAIR principles (Findable, Accessible, Interoperable, and Reusable). This universal format is pivotal for fostering collaboration and ensuring transparency, especially in large-scale European projects such as RADIATE and ReMade@ARI.
+Ion Beam Analysis (IBA) is a suite of powerful techniques with applications spanning materials science, nuclear physics, and biology. Despite its vast potential, the intricacies of managing and analyzing IBA data have often posed challenges. The introduction of the Ion Beam Data Format (IDF) aims at a more efficient data management, aligning with the FAIR principles (Findable, Accessible, Interoperable, and Reusable). This universal format is pivotal for fostering collaboration and ensuring transparency, especially in large-scale European projects such as RADIATE and `ReMade@ARI <https://remade-project.eu>`_.
 
 IBA Studio:
 ===========
@@ -39,25 +39,24 @@ Getting Started
    - `Windows Compiled Release <link-to-windows-release>`_
    - `Linux Compiled Release <link-to-linux-release>`_
 2. **Documentation:** Delve into our `comprehensive documentation <link-to-documentation>`_ to explore all features and functionalities of IBA Studio.
-3. **Examples:** Explore `sample projects and tutorials <link-to-examples>`_ for a hands-on experience.
+
+.. 3. **Examples:** Explore `sample projects and tutorials <link-to-examples>`_ for a hands-on experience.
 
 Contribution
 ============
 
-We value and encourage contributions from the scientific community. Whether it's feedback, bug reports, or feature suggestions, your insights are instrumental in refining IBA Studio. Please refer to our `contribution guidelines <link-to-contribution-guidelines>`_ for more details.
+We value and encourage contributions from the scientific community. Whether it's feedback, bug reports, or feature suggestions, your insights are instrumental in refining IBA Studio.
 
 Training and Ion Beam Times
 ===========================
 
-For scholars and researchers interested in accessing training or applying for ion beam times within the ReMade@ARI project, `click here <link-to-training-and-application>`_.
+If interested in accessing training or applying for ion beam times within the `ReMade@ARI <https://remade-project.eu>`_, contact me.
 
-License
-=======
+.. License
+.. =======
 
-IBA Studio is an open-source tool, licensed under `specific license name <link-to-license>`_.
+.. IBA Studio is an open-source tool, licensed under `specific license name <link-to-license>`_.
 
 ------------
 
-We appreciate your interest in IBA Studio. For inquiries or feedback, please `raise an issue <link-to-issues>`_ or contact our `support team <link-to-support>`_.
-
-Wishing you fruitful research endeavors.
+We appreciate your interest in IBA Studio.
