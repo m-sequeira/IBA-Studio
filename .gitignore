@@ -5,6 +5,7 @@ pyIBA*
 
 *.spec
 run_main.py
+*.log
 
 tests
 *_env

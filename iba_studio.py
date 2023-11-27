@@ -232,8 +232,6 @@ class Window(QMainWindow, Ui_MainWindow):
 		horizontalHeader.resizeSection(0, 135)
 		horizontalHeader.resizeSection(1, 70)
 
-		# self.executable_dir = os.path.join(os.path.dirname(__file__), 'pyIBA') + '/'
-
 		self.error_window = self.message_window()
 
 		self.about_window = About_Window()
