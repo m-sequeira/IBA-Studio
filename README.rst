@@ -38,7 +38,16 @@ Getting Started
 1. **Installation:** 
    - `Windows Compiled Release <link-to-windows-release>`_
    - `Linux Compiled Release <link-to-linux-release>`_
-2. **Documentation:** Delve into our `comprehensive documentation <link-to-documentation>`_ to explore all features and functionalities of IBA Studio.
+2. **Running from source:**
+   IBA Studio depends on `pyIBA <https://github.com/m-sequeira/pyIBA>`_,
+   which also provides the bundled NDF executables used by the application
+   (``pyIBA/codes/NDF_11_MS/NDF.exe`` and ``IDF2NDF.exe``). Install pyIBA
+   before running IBA Studio from source::
+
+      git clone https://github.com/m-sequeira/pyIBA
+      python3 -m pip install -e pyIBA
+
+3. **Documentation:** Read our `comprehensive documentation <link-to-documentation>`_ to explore all features and functionalities of IBA Studio.
 
 .. 3. **Examples:** Explore `sample projects and tutorials <link-to-examples>`_ for a hands-on experience.
 
