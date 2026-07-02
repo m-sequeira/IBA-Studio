@@ -383,9 +383,10 @@ class Window(QMainWindow, Ui_MainWindow):
 		filePath, _ = QFileDialog.getOpenFileName(self, "Add calibration file", "", "All files (*)", options=options)
 
 		if filePath != '':
-			fileName = filePath.split('/')[-1]
+			fileName = os.path.basename(filePath)
+			destination = os.path.join(self.idf_file.path_dir, fileName)
 			try:
-				copyfile(filePath, self.idf_file.path_dir + fileName)
+				copyfile(filePath, destination)
 			except:
 				pass
 
@@ -652,21 +653,20 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 
-	def open(self, fileName = ''):
-		if fileName == False:
+	def open(self, path = ''):
+		if path == False:
 			if self.ndf_window.isVisible():
 				self.ndf_window.close()
 
 			options = QFileDialog.Options()
-			fileName, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml *.idf)", options=options)
+			path, _ = QFileDialog.getOpenFileName(self, "Open IDF file...", "", "IDF Files (*.xml *.idf)", options=options)
 
 
-		if fileName != '':
-			self.path = fileName
-			self.path_dir = '/'.join(self.path.split('/')[:-1]) + '/'
-			if self.path_dir == '/':
+		if path != '':
+			self.path = path
+			self.path_dir, self.file = os.path.split(self.path)
+			if self.path_dir == os.sep:
 				self.path_dir = ''
-			self.file = self.path.split('/')[-1]
 
 			print('Opening file...')
 			print('Path: %s' %self.path_dir)
@@ -717,25 +717,24 @@ class Window(QMainWindow, Ui_MainWindow):
 	def save_as(self, givenFileName = ''):
 		if self.debug: print('NDF_gui, save_as path', givenFileName)
 		if givenFileName in ['', False] :
-			fileName,_ = QFileDialog.getSaveFileName(self, 'Save File', '', 'idf (*.idf *.xml)')
-			if fileName == '':
+			path,_ = QFileDialog.getSaveFileName(self, 'Save File', '', 'idf (*.idf *.xml)')
+			if path == '':
 				return
 		else:
-			fileName = givenFileName
+			path = givenFileName
 
 		## check if fileName ends with .xml otherwise save it as idf
-		if fileName[-4:] != '.xml':
-			fileName = fileName + '.idf'
+		if path[-4:] != '.xml':
+			path = path + '.idf'
 
-		if fileName != '':
-			self.setWindowTitle('IDF Viewer: ' + fileName)
+		if path != '':
+			self.setWindowTitle('IDF Viewer: ' + path)
 
-			self.path = fileName
-			self.path_dir = '/'.join(self.path.split('/')[:-1]) + '/'
-			self.file = self.path.split('/')[-1]
+			self.path = path
+			self.path_dir, self.file = os.path.split(self.path)
 
 			self.save()
-			self.open(fileName)
+			self.open(path)
 
 
 	def save(self):
@@ -841,18 +840,18 @@ class Window(QMainWindow, Ui_MainWindow):
 		name = self.file.split('.')[0]
 
 		for ext in ext_toclear:
-			files = glob(self.path_dir + name + '*' + ext)
+			files = glob(os.path.join(self.path_dir, name + '*' + ext))
 			for f in files:
 				os.remove(f)
 
 		for ext in ext_dir_toclear:
-			dirs = glob(self.path_dir + name + '*' + ext)
+			dirs = glob(os.path.join(self.path_dir, name + '*' + ext))
 			for d in dirs:
 				rmtree(d)
 		
 	def clear_idv_file(self):
 		name = self.file.split('.')[0] + '.idv'
-		files = glob(self.path_dir + name)
+		files = glob(os.path.join(self.path_dir, name))
 		for f in files:
 			os.remove(f)
 
@@ -886,7 +885,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		if self.ndf_window.isVisible():
 			self.ndf_window.close()
 		
-		self.open(fileName = self.path)
+		self.open(path = self.path)
 		self.reload_window()
 		# the above will initiate the change_idf in the row "in idf file"
 		self.runList.setCurrentRow(self.runList.count()-1)
@@ -898,7 +897,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		if self.debug: print('NDF_gui, reload_window - reloading begins')
 		if self.path != None:
-			self.setWindowTitle('IBA Studio: ' + self.path.split('/')[-1])
+			self.setWindowTitle('IBA Studio: ' + os.path.basename(self.path))
 
 			self.notes_user.setText(self.idf_file.user)
 			self.notes_note.insertPlainText('\n\n'.join(self.idf_file.description))

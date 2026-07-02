@@ -1,8 +1,7 @@
 
-from os import mkdir
+import os
 from shutil import copyfile
 from platform import platform
-from os.path import dirname, realpath, isfile, join as osjoin
 from subprocess import Popen
 
 from numpy import loadtxt
@@ -27,7 +26,7 @@ class NDF_advanced():
 		self.connectSignalsSlots()
 
 		# try:
-		# 	mkdir(self.path_dir_tmp)
+		# 	os.mkdir(self.path_dir_tmp)
 		# except:
 		# 	pass
 
@@ -65,9 +64,9 @@ class NDF_advanced():
 		self.window.save_state()
 
 		# path used just to create the files everytime the generate button is pressed
-		self.path_dir_tmp = self.window.path_dir + 'advanced_inputs/'
+		self.path_dir_tmp = os.path.join(self.window.path_dir, 'advanced_inputs')
 		try:
-			mkdir(self.path_dir_tmp)
+			os.mkdir(self.path_dir_tmp)
 		except:
 			pass
 
@@ -165,7 +164,7 @@ class NDF_advanced():
 		self.window.advanced_spc_input_field.insertPlainText(''.join(data))
 
 	def load_advanced_tcn_input(self):
-		tcn_path = self.idf_file.path_dir + 'ndf.tcn'
+		tcn_path = os.path.join(self.idf_file.path_dir, 'ndf.tcn')
 
 		with open(tcn_path, 'r') as file:
 			data = file.readlines()
@@ -179,7 +178,7 @@ class NDF_advanced():
 		fileName, _ = QFileDialog.getOpenFileName(self.window, "Add TCN file", "", "tcn files (*.tcn)", options=options)
 
 		if fileName != '':
-			copyfile(fileName, self.path_dir_tmp + '/ndf.tcn')
+			copyfile(fileName, os.path.join(self.path_dir_tmp, 'ndf.tcn'))
 
 		self.load_advanced_tcn_input()
 
@@ -193,8 +192,6 @@ class NDF_advanced():
 		if fileName != '':
 
 			self.path_advanced = fileName
-			# self.path_dir_tmp = '/'.join(self.path_advanced.split('/')[:-1]) + '/'
-			# self.file = self.path_advanced.split('/')[-1]
 
 			print('Save file...')
 			print('Path: %s' %self.path_advanced)
@@ -225,25 +222,27 @@ class NDF_advanced():
 		for k,field in pairs.items():
 			text = field.toPlainText()
 			if k != None:
-				with open(self.path_advanced + '/' + k, 'w') as file:
+				file_path = os.path.join(self.path_advanced, k)
+				with open(file_path, 'w') as file:
 					file.write(text)
 
-
-				print(self.path_advanced + '/' + k, 'saved')
-
+				print(file_path, 'saved')
+				
 
 		for geo_path, geo_text in zip(self.filenames_advanced['geo_files'], self.geo_text):
-			with open(self.path_advanced + '/' + geo_path, 'w') as file:
+			file_path = os.path.join(self.path_advanced, geo_path)
+			with open(file_path, 'w') as file:
 				file.write(''.join(geo_text))
 
-			print(self.path_advanced + '/' + geo_path, 'saved')
-
+			print(file_path, 'saved')
+				
 
 		for dat in self.filenames_advanced['dataxy_files']:
+			source_path = os.path.join(self.path_dir_tmp, dat)
+			destination_path = os.path.join(self.path_advanced, dat)
 			try:
-				copyfile(self.path_dir_tmp + dat, self.path_advanced + '/' + dat)
-
-				print(self.path_advanced + '/' + dat, 'saved')
+				copyfile(source_path, destination_path)
+				print(destination_path, 'saved')
 			except:
 				pass
 
@@ -302,7 +301,7 @@ class NDF_advanced():
 					}
 
 			for field, filename in pairs.items():       
-				res_filename = self.path_advanced + '/' + filename
+				res_filename = os.path.join(self.path_advanced, filename)
 
 				with open(res_filename, 'r') as file:
 					data = file.readlines()
@@ -339,7 +338,7 @@ class NDF_advanced():
 
 		res_filename = '%sf%s.dat' %(file[:3], fit_id)
 
-		data = loadtxt(self.path_advanced + '/' + res_filename, skiprows = 7)
+		data = loadtxt(os.path.join(self.path_advanced, res_filename), skiprows = 7)
 
 		data_x_given = data_x_fit = data[:,0]
 		data_y_given = data[:,1]
@@ -415,11 +414,11 @@ class NDF_advanced():
 
 class run_ndf_from_ori_files(NDF_Window):
 	def tcn_warning(self):
-		file = self.advanced_tab.path_advanced + '/ndf.tcn'
+		file = os.path.join(self.advanced_tab.path_advanced, 'ndf.tcn')
 		current_option = str(self.comboRun_speed.currentText())
 
 		if 'TCN' in current_option:
-			if isfile(file) is False:
+			if os.path.isfile(file) is False:
 				msg = QMessageBox()
 				msg.setIcon(QMessageBox.Information)
 
@@ -440,7 +439,7 @@ class run_ndf_from_ori_files(NDF_Window):
 		fileName, _ = QFileDialog.getOpenFileName(self, "Add TCN file", "", "tcn files (*.tcn)", options=options)
 
 		if fileName != '':
-			copyfile(fileName, self.advanced_tab.path_advanced + '/ndf.tcn')
+			copyfile(fileName, os.path.join(self.advanced_tab.path_advanced, 'ndf.tcn'))
 
 		return fileName
 
@@ -485,7 +484,7 @@ class run_ndf_from_ori_files(NDF_Window):
 		path = self.advanced_tab.path_advanced
 		file = self.advanced_tab.filenames_advanced['spc_files'][0] 
 		
-		cwd = osjoin(dirname(__file__), 'pyIBA/pyIBA')
+		cwd = os.path.join(os.path.dirname(__file__), 'pyIBA/pyIBA')
 		cmd = wine + ' ' + cwd + ndf_path + ' ' + file + ' ' + ndf_flags
 		path_bat = path + 'ndf.bat'
 
@@ -539,7 +538,7 @@ class NDF_Fit_Figure(QMainWindow, Ui_NDF_Fit_Figure):
 
 		res_filename = '%sf%s.dat' %(file[:3], fit_id)
 
-		data = loadtxt(self.path_advanced + '/' + res_filename, skiprows = 7)
+		data = loadtxt(os.path.join(self.path_advanced, res_filename), skiprows = 7)
 
 		data_x_given = data_x_fit = data[:,0]
 		data_y_given = data[:,1]

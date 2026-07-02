@@ -2,6 +2,7 @@ from pyIBA import IDF
 
 from pickle import dump, load as pickleLoad
 from copy import deepcopy
+import os
 
 
 class project():
@@ -11,7 +12,7 @@ class project():
 
 		self.path_dir = self.idf_file.path_dir
 		self.name = self.idf_file.name
-		self.file_path = self.path_dir + self.name + '.idv'
+		self.file_path = os.path.join(self.path_dir, self.name + '.idv')
 
 		self.debug = False
 
@@ -47,13 +48,12 @@ class project():
 		size_oriname = len(self.idf_file.name)
 		
 		for idf in self.sim_version_history[::-1]:
-			name = idf.path_dir.split('/')[-2]
+			name = os.path.basename(idf.path_dir)
 			name = name[size_oriname + 1:-4]
 			name = name.replace('_', ' ')
-			# if name == '':
-			# 	name = 'Initial'
+			
 			try:
-				with open(idf.path_dir + 'run_status.res') as file:
+				with open(os.path.join(idf.path_dir, 'run_status.res')) as file:
 					status = file.readline()
 					if 'Run' in status:
 						name = '[R] ' + name
@@ -64,13 +64,14 @@ class project():
 
 		prev_names.append('In idf file')
 
+
 		return prev_names
 
 	def check_simulations_running(self):
 		running_states = []
 		for idf in self.sim_version_history[::-1]:
 			try:
-				with open(idf.path_dir + 'run_status.res') as file:
+				with open(os.path.join(idf.path_dir, 'run_status.res')) as file:
 					status = file.readline()
 					running_states.append('Run' in status)
 			except:
@@ -85,7 +86,7 @@ class project():
 def load(pickle_filename):
 	project = pickleLoad(open(pickle_filename, 'rb'))
 	
-	project.path_dir = '/'.join(pickle_filename.split('/')[:-1]) + '/'
+	project.path_dir = os.path.dirname(pickle_filename)
 	project.file_path = pickle_filename
 	return project
 

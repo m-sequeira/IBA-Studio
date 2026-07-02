@@ -1,8 +1,7 @@
 from sys import argv, path as syspath
 from platform import platform
 from subprocess import Popen
-from os.path import dirname, isfile, abspath, join as osjoin#, dirname, realpath
-from os import mkdir, listdir
+import os
 from shutil import copyfile, copytree
 from datetime import datetime
 from copy import deepcopy
@@ -19,7 +18,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import Qt, pyqtSlot, QObject, QThread, pyqtSignal
 
-syspath.insert(0, abspath(osjoin(dirname(__file__), '..')))
+syspath.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ui.NDF_run_ui import Ui_MainWindow
 
 from pyIBA import IDF
@@ -193,27 +192,28 @@ class Window(QMainWindow, Ui_MainWindow):
 			logging.warning('run_ndf started...')
 			print('ndf_run_windoww, run_ndf - at start nversions:', len(self.project.sim_version_history))
 			for p in self.project.sim_version_history:
-				print('\t', p.path_dir.split('/')[-1])
+				print('\t', os.path.basename(p.path_dir))
 
 		self.main_window.pushLoad_results.setEnabled(True)
 
 		# create folder and copy the files from previous simulation to there (to avoid double scattering calculation etc)
-		new_folder = self.project.path_dir + self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M-%S') + '_idv'
-		path_new_idf = new_folder + '/' + self.main_window.idf_file.name + '.idf'
+		new_folder_name = self.project.name + '_' + datetime.now().strftime('%d-%m-%Y_%Hh%M-%S') + '_idv'
+		new_folder = os.path.join(self.project.path_dir, new_folder_name)
+		path_new_idf = os.path.join(new_folder, self.main_window.idf_file.name + '.idf')
 
 		try:
-			mkdir(new_folder)
+			os.mkdir(new_folder)
 
 			if len(self.project.sim_version_history) > 1:
-				prev_folder = self.project.sim_version_history[-1].path_dir				
-				# copytree(prev_folder, new_folder)
-				file_codes_copy = [self.project.name[:3] + 'u*', # pileup
-									self.project.name[:3] + 'ds*'] # double scattering
+				prev_folder = self.project.sim_version_history[-1].path_dir
+				file_codes_copy = [self.project.name[:3] + 'u*',  # pileup
+								self.project.name[:3] + 'ds*']  # double scattering
 
 				for code in file_codes_copy:
-					files = glob(prev_folder + code)
+					files = glob(os.path.join(prev_folder, code))
 					for file in files:
-						copyfile(file, new_folder + '/' + file.split('/')[-1])
+						copyfile(file, os.path.join(new_folder, os.path.basename(file)))
+
 		except Exception as e:
 			logging.error(f"Exception occurred: {str(e)}")
 			tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
@@ -230,7 +230,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 		try:
 			# a copy of self.main_window.idf_file should be created before saving to avoid changing the origianl path_dir 
-			idf_file_run = deepcopy(self.main_window.idf_file)
+			# idf_file_run = deepcopy(self.main_window.idf_file)
+			idf_file_run = self.main_window.idf_file.copy()
 			idf_file_run.save_idf(path_new_idf)
 
 			# project.append makes a deepcopy of the idf_file			
@@ -292,9 +293,9 @@ class Window(QMainWindow, Ui_MainWindow):
 		path = idf_file.path_dir
 		file = idf_file.spc_files[0]
 
-		cwd = idf_file.executable_dir[:-1]
+		cwd = idf_file.executable_dir
 		cmd = cwd + ndf_path + ' ' + file + ' ' + ndf_flags
-		path_bat = path + 'ndf.bat'
+		path_bat = os.path.join(path, 'ndf.bat')
 
 		if self.debug: print(cmd)
 
@@ -332,9 +333,9 @@ class Window(QMainWindow, Ui_MainWindow):
 		path = idf_file.path_dir
 		file = idf_file.spc_files[0]
 
-		cwd = idf_file.executable_dir[:-1]
+		cwd = idf_file.executable_dir
 		cmd = wine + ' ' + cwd + ndf_path + ' ' + file + ' ' + ndf_flags
-		path_bat = path + 'ndf.bat'
+		path_bat = os.path.join(path, 'ndf.bat')
 
 		if self.debug: print(cmd)
 		
@@ -398,11 +399,11 @@ class Window(QMainWindow, Ui_MainWindow):
 					
 
 	def tcn_warning(self):
-		file = self.main_window.idf_file.path_dir + 'ndf.tcn'
+		file = os.path.join(self.main_window.idf_file.path_dir, 'ndf.tcn')
 		current_option = str(self.comboRun_speed.currentText())
 
 		if 'TCN' in current_option:
-			if isfile(file) is False:
+			if os.path.isfile(file) is False:
 				msg = QMessageBox()
 				msg.setIcon(QMessageBox.Information)
 
@@ -425,7 +426,7 @@ class Window(QMainWindow, Ui_MainWindow):
 		fileName, _ = QFileDialog.getOpenFileName(self, "Add TCN file", "", "tcn files (*.tcn)", options=options)
 
 		if fileName != '':
-			copyfile(fileName, self.main_window.idf_file.path_dir + 'ndf.tcn')
+			copyfile(fileName, os.path.join(self.main_window.idf_file.path_dir, 'ndf.tcn'))
 
 		return fileName
 
