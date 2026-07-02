@@ -52,10 +52,15 @@ Training and Ion Beam Times
 
 If interested in accessing training or applying for ion beam times within the `ReMade@ARI <https://remade-project.eu>`_, contact me.
 
-.. License
-.. =======
+License
+-------
 
-.. IBA Studio is an open-source tool, licensed under `specific license name <link-to-license>`_.
+IBA Studio is open-source software licensed under the
+`GNU General Public License v3.0 or later <LICENSE>`_.
+
+You may use, study, modify, and redistribute it under the GPL terms. If
+you distribute modified versions, you must provide the corresponding
+source code under the same license.
 
 ------------
 

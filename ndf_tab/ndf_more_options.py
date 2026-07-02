@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from PyQt5.QtWidgets import (
 	QApplication, QLabel, QLineEdit, QFormLayout,QShortcut,
 	 QDialog, QMainWindow, QMessageBox,
@@ -61,5 +63,4 @@ class Window(QMainWindow, Ui_MainWindow):
 
 	def close_window(self):
 		self.close()
-
 

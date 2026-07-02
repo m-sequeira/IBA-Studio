@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from ui.about_window_ui import Ui_dialog_about
 
 

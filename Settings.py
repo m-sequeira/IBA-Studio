@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from configparser import ConfigParser
 import os
 import sys
@@ -101,4 +103,3 @@ class settings():
 
 		with open(self.settings_path, 'w') as file:
 			file.write(textwrap.dedent(text))
-

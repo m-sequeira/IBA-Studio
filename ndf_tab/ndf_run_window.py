@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from sys import argv, path as syspath
 from platform import platform
 from subprocess import Popen

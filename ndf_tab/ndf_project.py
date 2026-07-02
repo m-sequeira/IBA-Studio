@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from pyIBA import IDF
 
 from pickle import dump, load as pickleLoad
@@ -89,7 +91,6 @@ def load(pickle_filename):
 	project.path_dir = os.path.dirname(pickle_filename)
 	project.file_path = pickle_filename
 	return project
-
 
 
 

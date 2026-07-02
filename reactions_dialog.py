@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from ui.reactions_ui import Ui_Dialog as Ui_Reactions_Dialog
 
 
