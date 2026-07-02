@@ -11,6 +11,7 @@ tests
 *_env
 build
 dist
+splashes/
 
 *.pyc
 *.res
